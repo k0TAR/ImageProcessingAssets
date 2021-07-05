@@ -17,7 +17,8 @@ void GaussianFilter(uint3 id : SV_DispatchThreadID)
         for (uint dy = 0; dy < FilterSize; dy++)
         {
             float filterItem = Filter[dx * (FilterSize - 1) + dy];
-            Result[id.xy] += Input[id.xy + int2(dx - FilterSize / 2, dy - FilterSize / 2)] * filterItem / Weight;
+            Result[id.xy] += Input[id.xy + int2(dx - FilterSize / 2, dy - FilterSize / 2)] 
+                * filterItem / Weight;
         }
     }
     

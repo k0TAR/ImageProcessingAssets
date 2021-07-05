@@ -32,7 +32,7 @@ public static class ComputeShaderApplier
 
     public static RenderTexture RunComputeShader(
         ComputeShader comp, 
-        Texture2D input)
+        Texture input)
     {
         //RenderTextureの初期化
         //Initializing Render Texture
@@ -67,7 +67,7 @@ public static class ComputeShaderApplier
 
     public static RenderTexture RunComputeShader(
         ComputeShader comp, 
-        Texture2D input, 
+        Texture input, 
         Dictionary<string, object> kernelParams)
     {
         //RenderTextureの初期化
@@ -105,7 +105,7 @@ public static class ComputeShaderApplier
 
     public static RenderTexture RunComputeShader(
         ComputeShader comp, 
-        Texture2D input, 
+        Texture input, 
         int[] grid, 
         Dictionary<string, object> kernelParams)
     {
@@ -170,7 +170,7 @@ public static class ComputeShaderApplier
         }
     }
 
-    private static RenderTexture GenerateRenderTexture(Texture2D input)
+    private static RenderTexture GenerateRenderTexture(Texture input)
     {
         var result = new RenderTexture(input.width, input.height, 0, RenderTextureFormat.ARGB32);
         result.enableRandomWrite = true;
@@ -178,7 +178,7 @@ public static class ComputeShaderApplier
         result.Create();
         return result;
     }
-    private static RenderTexture GenerateRenderTexture(Texture2D input, int[] grid)
+    private static RenderTexture GenerateRenderTexture(Texture input, int[] grid)
     {
         var result = new RenderTexture(input.width / grid[0], input.height / grid[1], 0, RenderTextureFormat.ARGB32);
         result.enableRandomWrite = true;

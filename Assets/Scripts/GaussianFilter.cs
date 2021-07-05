@@ -61,6 +61,6 @@ public class GaussianFilter : MonoBehaviour
 
     private float Gaussian(int x, int y, float sigma)
     {
-        return Mathf.Exp( -(x*x + y*y) / (2.0f * sigma * sigma) ); //(1 / (2 * Mathf.PI * sigma * sigma) ) * 
+        return (1 / (2 * Mathf.PI * sigma * sigma)) * Mathf.Exp( -(x*x + y*y) / (2.0f * sigma * sigma) ); //
     }
 }

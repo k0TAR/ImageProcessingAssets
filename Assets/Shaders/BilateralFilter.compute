@@ -1,14 +1,40 @@
-﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+﻿#pragma kernel BilateralFilter
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
+Texture2D<float4> Input;
 RWTexture2D<float4> Result;
+uint FilterSize;
+float Weight;
+float Sigma;
+RWStructuredBuffer<float> GaussianFilter;
+
+float EuclideanLen(float3 a, float3 b, float sigma)
+{
+    float d = (a.x - b.x) * (a.x - b.x) +
+            +(a.y - b.y) * (a.y - b.y) +
+            +(a.z - b.z) * (a.z - b.z);
+    return exp(-d / (2.0 * sigma * sigma));
+}
 
 [numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+void BilateralFilter(uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+    /*
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    */
+    float sum = 0.0;
+    float3 color = float3(0.0, 0.0, 0.0);
+    float3 center = Input[id.xy].xyz;
+    
+    for (uint dx = 0; dx < FilterSize; dx++)
+    {
+        for (uint dy = 0; dy < FilterSize; dy++)
+        {
+            float gaussianFilterItem = GaussianFilter[dx * (FilterSize - 1) + dy];
+            float3 currentPixel = Input[id.xy + int2(dx - FilterSize / 2, dy - FilterSize / 2)].xyz;
+            float weight = gaussianFilterItem * EuclideanLen(currentPixel, center, Sigma);
+            color += weight * currentPixel;
+            sum += weight;
+        }
+    }
+    Result[id.xy] = float4(color / sum, 1.0);
 }
