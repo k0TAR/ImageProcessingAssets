@@ -7,7 +7,7 @@ float Weight;
 float Sigma;
 RWStructuredBuffer<float> GaussianFilter;
 
-float EuclideanLen(float3 a, float3 b, float sigma)
+float IntensityLength(float3 a, float3 b, float sigma)
 {
     float d = (a.x - b.x) * (a.x - b.x) +
             +(a.y - b.y) * (a.y - b.y) +
@@ -23,16 +23,16 @@ void BilateralFilter(uint3 id : SV_DispatchThreadID)
     */
     float sum = 0.0;
     float3 color = float3(0.0, 0.0, 0.0);
-    float3 center = Input[id.xy].xyz;
+    float3 centerColor = Input[id.xy].xyz;
     
     for (uint dx = 0; dx < FilterSize; dx++)
     {
         for (uint dy = 0; dy < FilterSize; dy++)
         {
             float gaussianFilterItem = GaussianFilter[dx * (FilterSize - 1) + dy];
-            float3 currentPixel = Input[id.xy + int2(dx - FilterSize / 2, dy - FilterSize / 2)].xyz;
-            float weight = gaussianFilterItem * EuclideanLen(currentPixel, center, Sigma);
-            color += weight * currentPixel;
+            float3 currentPixelColor = Input[id.xy + int2(dx - FilterSize / 2, dy - FilterSize / 2)].xyz;
+            float weight = gaussianFilterItem * IntensityLength(currentPixelColor, centerColor, Sigma);
+            color += weight * currentPixelColor;
             sum += weight;
         }
     }

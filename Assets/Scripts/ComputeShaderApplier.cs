@@ -163,7 +163,12 @@ public static class ComputeShaderApplier
             else if (p.Value.GetType() == typeof(int[]))
             {
                 comp.SetInts(p.Key, (int[])p.Value);
-            } else if(p.Value.GetType() == typeof(ComputeBuffer))
+            }
+            else if (p.Value.GetType() == typeof(float[]))
+            {
+                comp.SetFloats(p.Key, (float[])p.Value);
+            }
+            else if(p.Value.GetType() == typeof(ComputeBuffer))
             {
                 comp.SetBuffer(kernelIndex, p.Key, (ComputeBuffer)p.Value);
             }

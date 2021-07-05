@@ -1,0 +1,55 @@
+﻿#pragma kernel SobelFilter
+
+/// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+Texture2D<float4> Input;
+float4 EdgeColor;
+float Threshold;
+float Sensitivity;
+int2 Resolution;
+
+[numthreads(8, 8, 1)]
+void SobelFilter(uint3 id : SV_DispatchThreadID)
+{
+    float3x3 kXfilter = float3x3(
+        -1, 0, 1,
+        -2, 0, 2,
+        -1, 0, 1
+    );
+    float3x3 kYfilter = float3x3(
+        -1, -2, -1,
+         0,  0,  0,
+         1,  2,  1
+    );
+    
+    int minusedX = clamp(id.x - 1, 0, Resolution.x - 1);
+    int minusedY = clamp(id.y - 1, 0, Resolution.y - 1);
+    int plusedX = clamp(id.x + 1, 0, Resolution.x - 1);
+    int plusedY = clamp(id.y + 1, 0, Resolution.y - 1);
+
+    float cgx = 0;
+    float cgy = 0;
+    
+    for (int x = -1; x < 2; x++)
+    {
+        for (int y = -1; y < 2; y++)
+        {
+            cgx += Input[id.xy + int2(x, y)] * kXfilter[x + 1][y + 1];
+            cgy += Input[id.xy + int2(x, y)] * kYfilter[x + 1][y + 1]; 
+        }
+    }
+    
+    //float3 cg1 = col8 - col0;
+    //float3 cg2 = col6 - col2;
+    //cg = sqrt (dot (cg1, cg1) + dot (cg2, cg2));
+
+    float3 cg = sqrt(cgx * cgx + cgy * cgy);
+    
+    float edge = cg * Sensitivity;
+    float4 result = float4(EdgeColor.xyz * saturate(edge - Threshold), 1);
+
+    Result[id.xy] = result;
+
+    
+}
