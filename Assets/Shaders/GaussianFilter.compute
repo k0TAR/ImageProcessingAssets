@@ -1,11 +1,28 @@
-﻿#pragma kernel Gaussian
+﻿#pragma kernel GaussianFilter
 
 Texture2D<float4> Input;
 RWTexture2D<float4> Result;
+uint FilterSize;
+float Weight;
+RWStructuredBuffer<float> Filter; 
 
 [numthreads (8,8,1)]
-void Gaussian(uint3 id : SV_DispatchThreadID)
+void GaussianFilter(uint3 id : SV_DispatchThreadID)
 {
+    //nxn -> row * i + column
+    //make int[n*n] array in cpu and provide the array and n to the kernel.
+    
+    for (uint dx = 0; dx < FilterSize; dx++)
+    {
+        for (uint dy = 0; dy < FilterSize; dy++)
+        {
+            float filterItem = Filter[dx * (FilterSize - 1) + dy];
+            Result[id.xy] += Input[id.xy + int2(dx - FilterSize / 2, dy - FilterSize / 2)] * filterItem / Weight;
+        }
+    }
+    
+    
+    /*
     float3x3 filter = (1.0 / 16.0) * 
         float3x3(
         1, 2, 1,
@@ -24,4 +41,5 @@ void Gaussian(uint3 id : SV_DispatchThreadID)
     float4 bottomRight = Input[id.xy + int2(1, -1)] * filter[2][2];
 
     Result[id.xy] = topLeft + top + topRight + left + middle + right + bottomLeft + bottom + bottomRight;
+    */
 }

@@ -1,16 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-[ExecuteAlways]
-public class ComputeShaderApplier : MonoBehaviour
+public static class ComputeShaderApplier 
 {
-    [SerializeField] RawImage _before = null;
-    [SerializeField] RawImage _after = null;
 
-    [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField] private Texture2D _tex = null;
 
     private struct ThreadSize
     {
@@ -25,6 +19,7 @@ public class ComputeShaderApplier : MonoBehaviour
             this.z = z;
         }
     }
+    /*
     private class ComputeShaderParameter<T>
     {
         public T _data;
@@ -32,29 +27,10 @@ public class ComputeShaderApplier : MonoBehaviour
             _data = input;
         }
 
-    }
-
-    private void Start()
-    {
-        if (!SystemInfo.supportsComputeShaders)
-        {
-            Debug.LogError("Does not support Compute Shader.");
-            return;
-        }
-
-    }
-
-    private void OnValidate()
-    {
-        _before.texture = _tex;
-
-        var result = RunComputeShader(_computeShader, _tex);
-
-        _after.texture = result;
-    }
+    }*/
 
 
-    private RenderTexture RunComputeShader(
+    public static RenderTexture RunComputeShader(
         ComputeShader comp, 
         Texture2D input)
     {
@@ -88,10 +64,11 @@ public class ComputeShaderApplier : MonoBehaviour
         return result;
     }
 
-    private RenderTexture RunComputeShader(
+
+    public static RenderTexture RunComputeShader(
         ComputeShader comp, 
         Texture2D input, 
-        Dictionary<string, object> parameters)
+        Dictionary<string, object> kernelParams)
     {
         //RenderTextureの初期化
         //Initializing Render Texture
@@ -99,7 +76,7 @@ public class ComputeShaderApplier : MonoBehaviour
 
         //Kernel Indexの取得
         //Getting Kernel Index
-        var kernelIndex = 0;// comp.FindKernel("Gaussian");
+        var kernelIndex = 0;// comp.FindKernel("GaussianFilter");
 
         //1つのグループの中に何個のスレッドがあるか
         //How many threads in one group
@@ -112,20 +89,8 @@ public class ComputeShaderApplier : MonoBehaviour
         comp.SetTexture(kernelIndex, "Input", input);
         comp.SetTexture(kernelIndex, "Result", result);
 
-        foreach(var p in parameters)
-        {
-            if (p.Value is Texture)
-            {
-                comp.SetTexture(kernelIndex, p.Key, (Texture)p.Value);
-            } else if(p.Value.GetType() == typeof(int))
-            {
-                comp.SetInt(p.Key, (int)p.Value);
-            }
-            else if(p.Value.GetType() == typeof(float))
-            {
-                comp.SetFloat(p.Key, (float)p.Value);
-            }
-        }
+        DistinguishAndSetParams(comp, kernelIndex, kernelParams);
+
 
         //GPUで処理を実行
         //Process in GPU
@@ -138,11 +103,11 @@ public class ComputeShaderApplier : MonoBehaviour
         return result;
     }
 
-    private RenderTexture RunComputeShader(
+    public static RenderTexture RunComputeShader(
         ComputeShader comp, 
         Texture2D input, 
         int[] grid, 
-        Dictionary<string, object> parameters)
+        Dictionary<string, object> kernelParams)
     {
         //RenderTextureの初期化
         //Initializing Render Texture
@@ -164,7 +129,24 @@ public class ComputeShaderApplier : MonoBehaviour
         comp.SetTexture(kernelIndex, "Result", result);
         comp.SetInts("Grid", grid);
 
-        foreach (var p in parameters)
+        DistinguishAndSetParams(comp, kernelIndex, kernelParams);
+
+        //GPUで処理を実行
+        //Process in GPU
+        comp.Dispatch(kernelIndex,
+            (input.width / (int)threadSize.x) / grid[0],
+            (input.height / (int)threadSize.y) / grid[1],
+            (int)threadSize.z
+        );
+
+        return result;
+    }
+
+    private static void DistinguishAndSetParams(
+        ComputeShader comp, int kernelIndex, Dictionary<string, object> kernelParams
+        )
+    {
+        foreach (var p in kernelParams)
         {
             if (p.Value is Texture)
             {
@@ -178,22 +160,17 @@ public class ComputeShaderApplier : MonoBehaviour
             {
                 comp.SetFloat(p.Key, (float)p.Value);
             }
+            else if (p.Value.GetType() == typeof(int[]))
+            {
+                comp.SetInts(p.Key, (int[])p.Value);
+            } else if(p.Value.GetType() == typeof(ComputeBuffer))
+            {
+                comp.SetBuffer(kernelIndex, p.Key, (ComputeBuffer)p.Value);
+            }
         }
-
-        //GPUで処理を実行
-        //Process in GPU
-        comp.Dispatch(kernelIndex,
-            (input.width / (int)threadSize.x) / grid[0],
-            (input.height / (int)threadSize.y) / grid[1],
-            (int)threadSize.z
-        );
-
-        return result;
     }
 
-
-
-    private RenderTexture GenerateRenderTexture(Texture2D input)
+    private static RenderTexture GenerateRenderTexture(Texture2D input)
     {
         var result = new RenderTexture(input.width, input.height, 0, RenderTextureFormat.ARGB32);
         result.enableRandomWrite = true;
@@ -201,7 +178,7 @@ public class ComputeShaderApplier : MonoBehaviour
         result.Create();
         return result;
     }
-    private RenderTexture GenerateRenderTexture(Texture2D input, int[] grid)
+    private static RenderTexture GenerateRenderTexture(Texture2D input, int[] grid)
     {
         var result = new RenderTexture(input.width / grid[0], input.height / grid[1], 0, RenderTextureFormat.ARGB32);
         result.enableRandomWrite = true;
