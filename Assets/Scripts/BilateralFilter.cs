@@ -11,11 +11,11 @@ public class BilateralFilter : MonoBehaviour
     [SerializeField] [Range(0,10)] int _bfIteration = 6;
 
 
-    [SerializeField] RawImage _before = null;
-    [SerializeField] RawImage _after = null;
+    [SerializeField] RawImage _beforeImage = null;
+    [SerializeField] RawImage _afterImage = null;
 
     [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField] private Texture2D _tex = null;
+    [SerializeField] private Texture _tex = null;
     private void Start()
     {
         if (!SystemInfo.supportsComputeShaders)
@@ -28,7 +28,25 @@ public class BilateralFilter : MonoBehaviour
 
     private void OnValidate()
     {
-        _before.texture = _tex;
+        if(_tex == null && _beforeImage != null)
+        {
+            _tex = _beforeImage.texture;
+
+        } else if(_beforeImage == null && _tex != null)
+        {
+            _beforeImage.texture = _tex;
+
+        } else if (_beforeImage == null && _tex == null)
+        {
+            Debug.Log("SET BEFORE RAWIMAGE OR TEXTURE IN BILATERAL FILTER.");
+            return;
+        }
+
+        if(_afterImage == null)
+        {
+            Debug.Log("SET AFTER RAWIMAGE IN BILATERAL FILTER.");
+            return;
+        }
 
         float[] filter = new float[_filterSize * _filterSize];
         float weight = 0;
@@ -53,15 +71,15 @@ public class BilateralFilter : MonoBehaviour
         computeShaderParams.Add("Weight", weight);
         computeShaderParams.Add("Sigma", _sigmaIntensity);
 
-        RenderTexture result = ComputeShaderApplier.RunComputeShader(_computeShader, _tex, computeShaderParams); ; 
+        var result = ComputeShaderApplier.RunComputeShader(_computeShader, _tex, computeShaderParams); ; 
         for(int i = 0; i < _bfIteration; i++)
         {
             result = ComputeShaderApplier.RunComputeShader(_computeShader, result, computeShaderParams);
         }
           
-        _after.texture = result;
+        _afterImage.texture = result;
 
-        filterBuffer.Release(); 
+        filterBuffer.Dispose(); 
         filterBuffer = null;
     }
 
