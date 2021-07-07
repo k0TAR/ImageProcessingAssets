@@ -27,28 +27,29 @@ public class SobelFilter : MonoBehaviour
 
     private void OnValidate()
     {
-        if (_tex == null && _beforeImage != null)
-        {
-            _tex = _beforeImage.texture;
-
-        }
-        else if (_beforeImage == null && _tex != null)
-        {
-            _beforeImage.texture = _tex;
-        }
-        else if(_beforeImage == null && _tex == null)
+        if (_beforeImage == null && _tex == null)
         {
             Debug.Log("SET BEFORE RAWIMAGE OR TEXTURE IN SOBEL FILTER.");
             return;
         }
+        else if (_tex == null && _beforeImage != null)
+        {
+            _tex = _beforeImage.texture;
+
+        }
+        else if (_tex != null)
+        {
+            _beforeImage.texture = _tex;
+        }
+        
 
         if (_afterImage == null)
         {
             Debug.Log("SET AFTER RAWIMAGE IN SOBEL FILTER.");
             return;
         }
+        _afterImage.texture = null;
 
-        Debug.Log("RAN");
 
         int[] resolution = new int[] { _tex.width, _tex.height };
 
