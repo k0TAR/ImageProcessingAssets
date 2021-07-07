@@ -28,27 +28,7 @@ public class BilateralFilter : MonoBehaviour
 
     private void OnValidate()
     {
-        if (_beforeImage == null && _tex == null)
-        {
-            Debug.Log("SET BEFORE RAWIMAGE OR TEXTURE IN SOBEL FILTER.");
-            return;
-        }
-        else if (_tex == null && _beforeImage != null)
-        {
-            _tex = _beforeImage.texture;
-
-        }
-        else if (_tex != null)
-        {
-            _beforeImage.texture = _tex;
-        }
-
-        if (_afterImage == null)
-        {
-            Debug.Log("SET AFTER RAWIMAGE IN BILATERAL FILTER.");
-            return;
-        }
-        _afterImage.texture = null;
+        if (!ComputeShaderApplier.IsInitializationEnough(_beforeImage, _afterImage, _tex, this)) return;
 
 
         float[] filter = new float[_filterSize * _filterSize];

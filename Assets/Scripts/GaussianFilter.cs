@@ -10,8 +10,8 @@ public class GaussianFilter : MonoBehaviour
     [SerializeField] int _filterSize = 5;
 
 
-    [SerializeField] RawImage _before = null;
-    [SerializeField] RawImage _after = null;
+    [SerializeField] RawImage _beforeImage = null;
+    [SerializeField] RawImage _afterImage = null;
 
     [SerializeField] private ComputeShader _computeShader = null;
     [SerializeField] private Texture2D _tex = null;
@@ -27,7 +27,8 @@ public class GaussianFilter : MonoBehaviour
 
     private void OnValidate()
     {
-        _before.texture = _tex;
+        if (!ComputeShaderApplier.IsInitializationEnough(_beforeImage, _afterImage, _tex, this)) return;
+
 
         float[] filter = new float[_filterSize * _filterSize];
         float weight = 0;
@@ -53,7 +54,7 @@ public class GaussianFilter : MonoBehaviour
 
         var result = ComputeShaderApplier.RunComputeShader(_computeShader, _tex, computeShaderParams);
 
-        _after.texture = result;
+        _afterImage.texture = result;
 
         filterBuffer.Release();
         filterBuffer = null;

@@ -1,11 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public static class ComputeShaderApplier 
 {
-
-
     private struct ThreadSize
     {
         public uint x;
@@ -29,6 +28,37 @@ public static class ComputeShaderApplier
 
     }*/
 
+    public static bool IsInitializationEnough(
+        RawImage beforeImage, 
+        RawImage afterImage, 
+        Texture usingTexture, 
+        Object usingClass)
+    {
+        if (beforeImage == null && usingTexture == null)
+        {
+            Debug.Log($"SET BEFORE RAWIMAGE OR TEXTURE IN {usingClass.name}.");
+            return false;
+        }
+        else if (usingTexture == null && beforeImage != null)
+        {
+            usingTexture = beforeImage.texture;
+
+        }
+        else if (usingTexture != null)
+        {
+            beforeImage.texture = usingTexture;
+        }
+
+
+        if (afterImage == null)
+        {
+            Debug.Log($"SET AFTER RAWIMAGE IN {usingClass.name}.");
+            return false;
+        }
+
+        afterImage.texture = null;
+        return true;
+    }
 
     public static RenderTexture RunComputeShader(
         ComputeShader comp, 
