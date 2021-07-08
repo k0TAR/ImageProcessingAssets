@@ -29,9 +29,9 @@ public static class ComputeShaderApplier
     }*/
 
     public static bool IsInitializationEnough(
-        RawImage beforeImage, 
-        RawImage afterImage, 
-        Texture usingTexture, 
+        ref RawImage beforeImage, 
+        ref RawImage afterImage, 
+        ref Texture usingTexture, 
         Object usingClass)
     {
         if (beforeImage == null && usingTexture == null)

@@ -1,0 +1,24 @@
+﻿#pragma kernel Dilation
+
+RWTexture2D<float4> Result;
+Texture2D<float4> Input;
+
+[numthreads(8, 8, 1)]
+void Dilation(uint3 id : SV_DispatchThreadID)
+{
+    float maxPixel = Input[id.xy].x;
+    float currentPixel = 0;
+    for (int i = -1; i < 2; i++)
+    {
+        for (int j = -1; j < 2; j++)
+        {
+            currentPixel = Input[id.xy + int2(i, j)].x;
+            if (maxPixel < currentPixel)
+            {
+                maxPixel = currentPixel;
+            }
+        }
+    }
+
+    Result[id.xy] = float4(maxPixel, maxPixel, maxPixel, 1);
+}

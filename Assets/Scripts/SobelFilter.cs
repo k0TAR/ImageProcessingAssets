@@ -27,7 +27,7 @@ public class SobelFilter : MonoBehaviour
 
     private void OnValidate()
     {
-        if ( !ComputeShaderApplier.IsInitializationEnough(_beforeImage, _afterImage, _tex, this) ) return;
+        if ( !ComputeShaderApplier.IsInitializationEnough(ref _beforeImage, ref _afterImage, ref _tex, this) ) return;
 
         float[] edgeColorVector = new float[4] { _edgeColor.r, _edgeColor.g, _edgeColor.b, _edgeColor.a};
         int[] resolution = new int[] { _tex.width, _tex.height };

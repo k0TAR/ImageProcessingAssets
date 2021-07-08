@@ -1,0 +1,21 @@
+﻿#pragma kernel Erosion
+
+RWTexture2D<float4> Result;
+Texture2D<float4> Input;
+
+[numthreads(8, 8, 1)]
+void Erosion(uint3 id : SV_DispatchThreadID)
+{
+    float minPixel = Input[id.xy].x;
+    float currentPixel = 0;
+    for (int i = -1; i < 2; i++)
+    {
+        for (int j = -1; j < 2; j++)
+        {
+            currentPixel = Input[id.xy + int2(i, j)].x;
+            minPixel = min(minPixel, currentPixel);
+        }
+    }
+
+    Result[id.xy] = float4(minPixel, minPixel, minPixel, 1);
+}

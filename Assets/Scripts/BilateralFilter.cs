@@ -8,7 +8,7 @@ public class BilateralFilter : MonoBehaviour
     [SerializeField] [Range(0, 10)] float _sigmaSpatial = 3f;
     [SerializeField] [Range(0, 10)] float _sigmaIntensity = .1f;
     [SerializeField] [Range(1, 15)] int _filterSize = 5;
-    [SerializeField] [Range(0,10)] int _bfIteration = 6;
+    [SerializeField] [Range(1,10)] int _bfIteration = 6;
 
 
     [SerializeField] RawImage _beforeImage = null;
@@ -28,7 +28,7 @@ public class BilateralFilter : MonoBehaviour
 
     private void OnValidate()
     {
-        if (!ComputeShaderApplier.IsInitializationEnough(_beforeImage, _afterImage, _tex, this)) return;
+        if (!ComputeShaderApplier.IsInitializationEnough(ref _beforeImage, ref _afterImage, ref _tex, this)) return;
 
 
         float[] filter = new float[_filterSize * _filterSize];
@@ -55,7 +55,7 @@ public class BilateralFilter : MonoBehaviour
         computeShaderParams.Add("Sigma", _sigmaIntensity);
 
         var result = ComputeShaderApplier.RunComputeShader(_computeShader, _tex, computeShaderParams); ; 
-        for(int i = 0; i < _bfIteration; i++)
+        for(int i = 1; i < _bfIteration; i++)
         {
             result = ComputeShaderApplier.RunComputeShader(_computeShader, result, computeShaderParams);
         }
