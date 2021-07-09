@@ -44,7 +44,7 @@ public static class ComputeShaderApplier
             usingTexture = beforeImage.texture;
 
         }
-        else if (usingTexture != null)
+        else if (usingTexture != null && beforeImage == null)
         {
             beforeImage.texture = usingTexture;
         }
