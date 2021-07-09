@@ -34,7 +34,7 @@ public static class ComputeShaderApplier
         ref Texture usingTexture, 
         Object usingClass)
     {
-        if (beforeImage == null && usingTexture == null)
+        if (beforeImage == null)
         {
             Debug.Log($"SET BEFORE RAWIMAGE OR TEXTURE IN {usingClass.name}.");
             return false;
@@ -43,10 +43,6 @@ public static class ComputeShaderApplier
         {
             usingTexture = beforeImage.texture;
 
-        }
-        else if (usingTexture != null && beforeImage == null)
-        {
-            beforeImage.texture = usingTexture;
         }
 
 
