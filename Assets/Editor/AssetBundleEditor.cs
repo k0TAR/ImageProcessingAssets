@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
@@ -6,9 +7,9 @@ using System.Collections.Generic;
 public class AssetBundleEditor : EditorWindow
 {
     static string _root_path = "AssetBundles";
-    static string _variant = "assetbundle";
 
-    [SerializeField] private List<UnityEngine.Object> _inputAssets;
+    [SerializeField] private UnityEngine.Object _inputAssetFolder = null;
+    [SerializeField] private string _assetBundleName = "";
 
     [MenuItem("Asset Bundle/Build Settings(Windows64)", false)]
     private static void OpenWindow()
@@ -25,23 +26,41 @@ public class AssetBundleEditor : EditorWindow
             GUI.backgroundColor = Color.gray;
             using (new GUILayout.HorizontalScope(EditorStyles.toolbar))
             {
-                GUILayout.Label("Assign assets that are going tobe bundled.");
+                GUILayout.Label("Assign asset folder that is going to be bundled.");
             }
             GUI.backgroundColor = defaultColor;
             using (new GUILayout.HorizontalScope())
             {
-                var so = new SerializedObject(this);
-                so.Update();
-                EditorGUILayout.PropertyField(so.FindProperty("_inputAssets"), true);
-                so.ApplyModifiedProperties();
+                var editorSO = new SerializedObject(this);
+                editorSO.Update();
+                EditorGUILayout.PropertyField(editorSO.FindProperty("_inputAssetFolder"), true);
+                editorSO.ApplyModifiedProperties();
             }
         }
+
         using (new GUILayout.VerticalScope(EditorStyles.helpBox))
         {
             GUI.backgroundColor = Color.gray;
             using (new GUILayout.HorizontalScope(EditorStyles.toolbar))
             {
-                GUILayout.Label("Designate the destination directory.");
+                GUILayout.Label("Input asset bundle name.");
+            }
+            GUI.backgroundColor = defaultColor;
+            using (new GUILayout.HorizontalScope())
+            {
+                var editorSO = new SerializedObject(this);
+                editorSO.Update();
+                EditorGUILayout.PropertyField(editorSO.FindProperty("_assetBundleName"), true);
+                editorSO.ApplyModifiedProperties();
+            }
+        }
+
+        using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            GUI.backgroundColor = Color.gray;
+            using (new GUILayout.HorizontalScope(EditorStyles.toolbar))
+            {
+                GUILayout.Label("Designated destination directory.");
             }
             GUI.backgroundColor = defaultColor;
 
@@ -52,19 +71,16 @@ public class AssetBundleEditor : EditorWindow
                 GUI.backgroundColor = Color.green;
                 if (GUILayout.Button("Build Asset Bundle"))
                 {
-                    BuildAssetBundle();
+                    BuildAssetBundlesForWindows64();
                 }
                 GUI.backgroundColor = defaultColor;
             }
         }
-    }
-
-    private void BuildAssetBundle()
-    {
 
     }
 
-    static private void BuildAssetBundlesForWindows64()
+
+    private void BuildAssetBundlesForWindows64()
     {
         BuildTarget target_platform = BuildTarget.StandaloneWindows64;
 
@@ -75,24 +91,34 @@ public class AssetBundleEditor : EditorWindow
             System.IO.Directory.CreateDirectory(output_path);
         }
 
-        var asset_bundle_build_list = new List<AssetBundleBuild>();
-        foreach (string asset_bundle_name in AssetDatabase.GetAllAssetBundleNames())
+        string[] srcFilesPath = Directory.GetFileSystemEntries(AssetDatabase.GetAssetPath(_inputAssetFolder));
+        foreach (string srcFilePath in srcFilesPath)
         {
-            var builder = new AssetBundleBuild();
-            builder.assetBundleName = asset_bundle_name;
-            builder.assetNames = AssetDatabase.GetAssetPathsFromAssetBundle(builder.assetBundleName);
-            builder.assetBundleVariant = _variant;
-            asset_bundle_build_list.Add(builder);
+            string fileName = Path.GetFileNameWithoutExtension(srcFilePath);
+            if (srcFilePath.EndsWith("meta")) continue;
+            AssetImporter importer = AssetImporter.GetAtPath(srcFilePath);
+            importer.assetBundleName = _assetBundleName;
+            importer.SaveAndReimport();
+            if (importer != null)
+            {
+                importer.SetAssetBundleNameAndVariant(_assetBundleName, "");
+            }
         }
 
-        if (asset_bundle_build_list.Count > 0)
-        {
-            BuildPipeline.BuildAssetBundles(
+
+        BuildPipeline.BuildAssetBundles(
                 output_path,
-                asset_bundle_build_list.ToArray(),
                 BuildAssetBundleOptions.ChunkBasedCompression,
                 target_platform
             );
+
+        foreach (string srcFilePath in srcFilesPath)
+        {
+            AssetImporter importer = AssetImporter.GetAtPath(srcFilePath);
+            if (importer != null)
+            {
+                importer.SetAssetBundleNameAndVariant("", "");
+            }
         }
     }
 }
