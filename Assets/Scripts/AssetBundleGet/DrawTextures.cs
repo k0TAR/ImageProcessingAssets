@@ -21,7 +21,7 @@ public class DrawTextures : MonoBehaviour
         
 
         _img.texture = await Task.Run(() => {
-            while (result == null) ;
+            while (result == null);
             return result[0];
         }); ;
     }
