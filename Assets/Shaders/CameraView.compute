@@ -46,22 +46,81 @@ RayHit CreateRayHit()
     return hit;
 }
 
-void IntersectGroundPlane(Ray ray, inout RayHit bestHit)
+struct Plane
 {
-    // Calculate distance along the ray where the ground plane is intersected
-    float t = -ray.origin.y / ray.direction.y;
-    if (0 < t && t < bestHit.distance)
+    float a0;
+    float a1;
+    float b0;
+    float b1;
+    float k;
+    float normalNumber;
+};
+
+Plane CraetePlane(float a0, float a1, float b0, float b1, float k, float normalNumber)
+{
+    Plane plane;
+
+    plane.a0 = a0;
+    plane.a1 = a1;
+    plane.b0 = b0;
+    plane.b1 = b1;
+    plane.k = k;
+    plane.normalNumber = normalNumber;
+    return plane;
+}
+
+void IntersectGroundPlane(Ray ray, inout RayHit bestHit, Plane plane)
+{
+    int aIndex = 0;
+    int bIndex = 1;
+    int cIndex = 2;
+    float3 normal = float3(0, 0, 1);
+    if (plane.normalNumber == 0)
     {
-        bestHit.distance = t;
-        bestHit.position = ray.origin + t * ray.direction;
-        bestHit.normal = float3(0.0f, 1.0f, 0.0f);
+        aIndex = 1; //y
+        bIndex = 2; //z
+        cIndex = plane.normalNumber;
+        normal = float3(1, 0, 0);
     }
+    else if (plane.normalNumber == 1)
+    {
+        aIndex = 2; //z
+        bIndex = 0; //x
+        cIndex = plane.normalNumber;
+        normal = float3(0, 1, 0);
+    }
+    else if (plane.normalNumber == 2)
+    {
+        aIndex = 0; //x
+        bIndex = 1; //y
+        cIndex = plane.normalNumber;
+        normal = float3(0, 0, 1);
+    }
+
+    
+    float t = (plane.k - ray.origin[cIndex]) / ray.direction[cIndex];
+    if (t < 0 || t > bestHit.distance)
+    {
+        return;
+    }
+    
+    float x = ray.origin[aIndex] + t * ray.direction[aIndex];
+    float y = ray.origin[bIndex] + t * ray.direction[bIndex];
+    if (x < plane.a0 || x > plane.a1 || y < plane.b0 || y > plane.b1)
+    {
+        return;
+    }
+    
+    bestHit.distance = t;
+    bestHit.position = ray.origin + t * ray.direction;
+    bestHit.normal = normal;
 }
 
 RayHit Trace(Ray ray)
 {
     RayHit bestHit = CreateRayHit();
-    IntersectGroundPlane(ray, bestHit);
+    Plane plane = CraetePlane(-4,4,-4,4,16,2);
+    IntersectGroundPlane(ray, bestHit, plane);
     return bestHit;
 }
 
