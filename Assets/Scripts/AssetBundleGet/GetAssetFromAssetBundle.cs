@@ -11,10 +11,10 @@ public static class GetAssetFromAssetBundle
 
     public static IEnumerator GetAssetsAsync<T>(string path, Action<T[]> Callback)
     {
-        _asset_bundle_path += path;
+        
         Debug.Log("START GETTING ASSETS.");
         
-        AssetBundleCreateRequest loadFileAsync = AssetBundle.LoadFromFileAsync(_asset_bundle_path);
+        AssetBundleCreateRequest loadFileAsync = AssetBundle.LoadFromFileAsync(_asset_bundle_path + path);
         while (!loadFileAsync.isDone)
         {
             Debug.Log("LoadFromFileAsync progress: " + (loadFileAsync.progress * 100.0f) + "%");
@@ -31,6 +31,7 @@ public static class GetAssetFromAssetBundle
 
         Callback(assets);
         Debug.Log("GETTING ASSETS END.");
+        assetBundle.Unload(false);
     }
 
     public static void GetAssets<T>(string path, Action<T[]> Callback)

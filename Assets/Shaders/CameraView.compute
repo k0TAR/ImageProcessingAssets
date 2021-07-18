@@ -2,6 +2,11 @@
 RWTexture2D<float4> Result;
 float4x4 _CameraToWorld;
 float4x4 _CameraInverseProjection;
+float2 LightFieldSize;
+RWStructuredBuffer<float4> LightFields;
+
+
+
 
 struct Ray
 {
@@ -54,6 +59,7 @@ struct Plane
     float b1;
     float k;
     float normalNumber;
+    float2 uv;
 };
 
 Plane CraetePlane(float a0, float a1, float b0, float b1, float k, float normalNumber)
@@ -69,7 +75,7 @@ Plane CraetePlane(float a0, float a1, float b0, float b1, float k, float normalN
     return plane;
 }
 
-void IntersectGroundPlane(Ray ray, inout RayHit bestHit, Plane plane)
+void IntersectPlane(Ray ray, inout RayHit bestHit, Plane plane)
 {
     int aIndex = 0;
     int bIndex = 1;
@@ -77,15 +83,15 @@ void IntersectGroundPlane(Ray ray, inout RayHit bestHit, Plane plane)
     float3 normal = float3(0, 0, 1);
     if (plane.normalNumber == 0)
     {
-        aIndex = 1; //y
-        bIndex = 2; //z
+        aIndex = 2; //z
+        bIndex = 1; //y
         cIndex = plane.normalNumber;
         normal = float3(1, 0, 0);
     }
     else if (plane.normalNumber == 1)
     {
-        aIndex = 2; //z
-        bIndex = 0; //x
+        aIndex = 0; //x
+        bIndex = 2; //z
         cIndex = plane.normalNumber;
         normal = float3(0, 1, 0);
     }
@@ -111,6 +117,8 @@ void IntersectGroundPlane(Ray ray, inout RayHit bestHit, Plane plane)
         return;
     }
     
+    plane.uv = float2((x - plane.a0) / (plane.a1 - plane.a0), (y - plane.b0) / (plane.b1 - plane.b0));
+    
     bestHit.distance = t;
     bestHit.position = ray.origin + t * ray.direction;
     bestHit.normal = normal;
@@ -119,8 +127,8 @@ void IntersectGroundPlane(Ray ray, inout RayHit bestHit, Plane plane)
 RayHit Trace(Ray ray)
 {
     RayHit bestHit = CreateRayHit();
-    Plane plane = CraetePlane(-4,4,-4,4,16,2);
-    IntersectGroundPlane(ray, bestHit, plane);
+    Plane plane = CraetePlane(-8.5, 8.5, -8.5, 8.5, 16, 2);
+    IntersectPlane(ray, bestHit, plane);
     return bestHit;
 }
 
@@ -128,8 +136,24 @@ float3 Shade(inout Ray ray, RayHit hit)
 {
     if (hit.distance < 1.#INF)
     {
+        hit.position.x += 8.5;
+        hit.position.y *= -1;
+        hit.position.y += 8.5;
+        
+        if (frac(hit.position.x) < 0.05)
+        {
+            return float3(0, 1.0, 0);
+        }
+        if (frac(hit.position.y) < 0.05)
+        {
+            return float3(1.0, 0, 0);
+
+        }
+        return LightFields[floor(hit.position.x) * LightFieldSize.x * LightFieldSize.y + floor(hit.position.y) * LightFieldSize.x * LightFieldSize.y * 17
+        + floor(frac(hit.position.x) * LightFieldSize.x) + floor(frac(hit.position.y) * LightFieldSize.y) * LightFieldSize.x].xyz;
+        
         // Return the normal
-        return hit.normal * 0.5f + 0.5f;
+        //return hit.normal * 0.5f + 0.5f;
     }
     else
     {

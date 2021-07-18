@@ -31,9 +31,9 @@ public class DrawTextures : MonoBehaviour
             while (result == null);
         });
 
+        _img.texture = result[0];
 
-
-        for(int i = 0; i < uvCountSide; i++)
+        for (int i = 0; i < uvCountSide; i++)
         {
             for(int j = 0; j < uvCountSide; j++)
             {
