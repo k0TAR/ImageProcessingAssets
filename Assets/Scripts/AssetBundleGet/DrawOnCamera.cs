@@ -9,6 +9,8 @@ public class DrawOnCamera : MonoBehaviour
 {
     [SerializeField] private ComputeShader _renderShader;
     private const int uvSideCount = 17;
+    private const int _lightFieldWidth = 1024;
+    private const int _lightFieldHeight = 512;
 
 
     private RenderTexture _target;
@@ -17,22 +19,7 @@ public class DrawOnCamera : MonoBehaviour
     private bool _initDone = false;
     ComputeBuffer lightFieldTextures;
 
-    public Texture2D ToTexture2D(Texture self)
-    {
-        var sw = self.width;
-        var sh = self.height;
-        var format = TextureFormat.RGBA32;
-        var result = new Texture2D(sw, sh, format, false);
-        var currentRT = RenderTexture.active;
-        var rt = new RenderTexture(sw, sh, 32);
-        UnityEngine.Graphics.Blit(self, rt);
-        RenderTexture.active = rt;
-        var source = new Rect(0, 0, rt.width, rt.height);
-        result.ReadPixels(source, 0, 0);
-        result.Apply();
-        RenderTexture.active = currentRT;
-        return result;
-    }
+
 
 
     Vector4[] texs;
@@ -62,15 +49,15 @@ public class DrawOnCamera : MonoBehaviour
         if (!_initDone)
         {
             IEnumerable<Vector4> test = Enumerable.Empty<Vector4>();
-            for (int i = 0; i < 1; i++)
+            for (int i = 0; i < uvSideCount * 2; i++)
             {
                 
                 Texture2D a = ToTexture2D(assetTextures[i]);
                 
-                
-                for (int k = a.height - 1 ; k >= 0 ; k--)
+
+                for (int k = _lightFieldHeight - 1 ; k >= 0 ; k--)
                 {
-                    for (int j = 0; j < a.width; j++)
+                    for (int j = 0; j < _lightFieldWidth ; j++)
                     {
                         Vector4 vec = a.GetPixel(j, k);
                         test = test.Concat<Vector4>(new Vector4[] { vec });
@@ -80,6 +67,7 @@ public class DrawOnCamera : MonoBehaviour
                 
             }
             texs = test.ToArray();
+            test = null;
             _initDone = true;
 
         }
@@ -102,6 +90,7 @@ public class DrawOnCamera : MonoBehaviour
 
         lightFieldTextures.Dispose();
         lightFieldTextures = null;
+
     }
 
     private void InitRenderTexture()
@@ -120,17 +109,16 @@ public class DrawOnCamera : MonoBehaviour
         }
     }
 
-
     private void SetShaderParameters()
     {
         
         lightFieldTextures = new ComputeBuffer(
-            assetTextures[0].width * assetTextures[0].height * 1, //uvSideCount * uvSideCount
+            _lightFieldWidth * _lightFieldHeight * uvSideCount * 2,
             System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4))
             );
         lightFieldTextures.SetData(texs);
 
-        float[] lightFieldSize = new float[] { assetTextures[0].width, assetTextures[0].height };
+        float[] lightFieldSize = new float[] { _lightFieldWidth, _lightFieldHeight };
 
         _renderShader.SetBuffer(0, "LightFields", lightFieldTextures);
         _renderShader.SetFloats("LightFieldSize", lightFieldSize);
@@ -139,5 +127,21 @@ public class DrawOnCamera : MonoBehaviour
 
         
     }
+
+
+
+    public Texture2D ToTexture2D(Texture input)
+    {
+        Texture2D result = new Texture2D(input.width, input.height, TextureFormat.RGBA32, false);
+        RenderTexture currentRT = RenderTexture.active;
+        RenderTexture rt = new RenderTexture(input.width, input.height, 32);
+        Graphics.Blit(input, rt);
+        RenderTexture.active = rt;
+        result.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+        result.Apply();
+        RenderTexture.active = currentRT;
+        return result;
+    }
+
 
 }

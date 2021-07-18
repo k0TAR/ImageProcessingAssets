@@ -31,7 +31,6 @@ public static class GetAssetFromAssetBundle
 
         Callback(assets);
         Debug.Log("GETTING ASSETS END.");
-        assetBundle.Unload(false);
     }
 
     public static void GetAssets<T>(string path, Action<T[]> Callback)
