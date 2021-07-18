@@ -18,11 +18,10 @@ public class DrawOnCamera : MonoBehaviour
     private Texture[] assetTextures = null;
     private bool _initDone = false;
     ComputeBuffer lightFieldTextures;
+    float[] _lightFieldSize = new float[] { _lightFieldWidth, _lightFieldHeight };
+    IEnumerable<Vector4> test;
 
 
-
-
-    Vector4[] texs;
     private void Awake()
     {
         _initDone = false;
@@ -41,17 +40,16 @@ public class DrawOnCamera : MonoBehaviour
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        if (assetTextures == null ) {
+        if (assetTextures == null && !_initDone) {
             Graphics.Blit(source, destination);
             return;
         }
 
         if (!_initDone)
         {
-            IEnumerable<Vector4> test = Enumerable.Empty<Vector4>();
-            for (int i = 0; i < uvSideCount * 2; i++)
+            test = Enumerable.Empty<Vector4>();
+            for (int i = 0; i < uvSideCount * 5; i++)
             {
-                
                 Texture2D a = ToTexture2D(assetTextures[i]);
                 
 
@@ -62,17 +60,12 @@ public class DrawOnCamera : MonoBehaviour
                         Vector4 vec = a.GetPixel(j, k);
                         test = test.Concat<Vector4>(new Vector4[] { vec });
                     }
-                            
                 }
-                
-            }
-            texs = test.ToArray();
-            test = null;
+            } 
             _initDone = true;
-
+            SetShaderParameters();
         }
 
-        SetShaderParameters();
 
         Render(destination);
     }
@@ -81,16 +74,18 @@ public class DrawOnCamera : MonoBehaviour
     {
         InitRenderTexture();
 
+        _renderShader.SetMatrix("_CameraToWorld", _camera.cameraToWorldMatrix);
+        _renderShader.SetMatrix("_CameraInverseProjection", _camera.projectionMatrix.inverse);
         _renderShader.SetTexture(0, "Result", _target);
-        int threadGroupsX = Mathf.CeilToInt(Screen.width / 8.0f);
-        int threadGroupsY = Mathf.CeilToInt(Screen.height / 8.0f);
+        int threadGroupsX = Mathf.CeilToInt(Screen.width / 16.0f);
+        int threadGroupsY = Mathf.CeilToInt(Screen.height / 16.0f);
         _renderShader.Dispatch(0, threadGroupsX, threadGroupsY, 1);
 
         UnityEngine.Graphics.Blit(_target, destination);
 
-        lightFieldTextures.Dispose();
-        lightFieldTextures = null;
-
+        //lightFieldTextures.Dispose();
+        //lightFieldTextures = null;
+        assetTextures = null;
     }
 
     private void InitRenderTexture()
@@ -111,20 +106,14 @@ public class DrawOnCamera : MonoBehaviour
 
     private void SetShaderParameters()
     {
-        
         lightFieldTextures = new ComputeBuffer(
-            _lightFieldWidth * _lightFieldHeight * uvSideCount * 2,
+            _lightFieldWidth * _lightFieldHeight * uvSideCount * 5,
             System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4))
             );
-        lightFieldTextures.SetData(texs);
-
-        float[] lightFieldSize = new float[] { _lightFieldWidth, _lightFieldHeight };
+        lightFieldTextures.SetData(test.ToArray());
 
         _renderShader.SetBuffer(0, "LightFields", lightFieldTextures);
-        _renderShader.SetFloats("LightFieldSize", lightFieldSize);
-        _renderShader.SetMatrix("_CameraToWorld", _camera.cameraToWorldMatrix);
-        _renderShader.SetMatrix("_CameraInverseProjection", _camera.projectionMatrix.inverse);
-
+        _renderShader.SetFloats("LightFieldSize", _lightFieldSize);
         
     }
 
