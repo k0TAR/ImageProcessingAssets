@@ -48,18 +48,12 @@ public class DrawOnCamera : MonoBehaviour
         if (!_initDone)
         {
             test = Enumerable.Empty<Vector4>();
-            for (int i = 0; i < uvSideCount * 5; i++)
+            for (int i = 0; i < 8; i++)
             {
-                Texture2D a = ToTexture2D(assetTextures[i]);
-                
-
-                for (int k = _lightFieldHeight - 1 ; k >= 0 ; k--)
+                for(int j = 0; j < 8; j++)
                 {
-                    for (int j = 0; j < _lightFieldWidth ; j++)
-                    {
-                        Vector4 vec = a.GetPixel(j, k);
-                        test = test.Concat<Vector4>(new Vector4[] { vec });
-                    }
+                    Debug.Log("lightField_" + i.ToString("00") + "_" + j.ToString("00") );
+                    _renderShader.SetTexture(0, "lightField_" + i.ToString("00") + "_" + j.ToString("00"), assetTextures[i * uvSideCount + j]);
                 }
             } 
             _initDone = true;
@@ -85,7 +79,7 @@ public class DrawOnCamera : MonoBehaviour
 
         //lightFieldTextures.Dispose();
         //lightFieldTextures = null;
-        assetTextures = null;
+        //assetTextures = null;
     }
 
     private void InitRenderTexture()
@@ -106,13 +100,14 @@ public class DrawOnCamera : MonoBehaviour
 
     private void SetShaderParameters()
     {
+        /*
         lightFieldTextures = new ComputeBuffer(
             _lightFieldWidth * _lightFieldHeight * uvSideCount * 5,
             System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4))
             );
-        lightFieldTextures.SetData(test.ToArray());
+        lightFieldTextures.SetData(test.ToArray());*/
 
-        _renderShader.SetBuffer(0, "LightFields", lightFieldTextures);
+        // _renderShader.SetBuffer(0, "LightFields", lightFieldTextures);
         _renderShader.SetFloats("LightFieldSize", _lightFieldSize);
         
     }
