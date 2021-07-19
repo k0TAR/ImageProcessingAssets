@@ -111,7 +111,7 @@ Ray CreateCameraRay(float2 uv)
 struct RayHit
 {
     float3 position;
-    int2 cameraPlaneIndex;
+    float2 cameraPlaneIndex;
     float distance;
     float3 normal;
 };
@@ -251,10 +251,10 @@ void IntersectPlaneWithoutRecordingHitDistance(Ray ray, inout RayHit bestHit, Pl
 RayHit Trace(Ray ray)
 {
     RayHit bestHit = CreateRayHit();
-    Plane cameraPlane = CraetePlane(-4, 4, -4, 4, 8, 2);
-    Plane cameraFocalPlane = CraetePlane(-4, 4, -4, 4, 16, 2);
+    Plane cameraPlane = CraetePlane(-8, 8, -4, 4, 8, 2);
+    Plane cameraFocalPlane = CraetePlane(-8, 8, -4, 4, 16, 2);
     IntersectPlaneWithoutRecordingHitDistance(ray, bestHit, cameraPlane);
-    bestHit.cameraPlaneIndex = int2(floor(bestHit.position.x), floor(bestHit.position.y));
+    bestHit.cameraPlaneIndex = float2(bestHit.position.x, bestHit.position.y);
     IntersectPlane(ray, bestHit, cameraFocalPlane);
     
     return bestHit;
@@ -546,27 +546,50 @@ float4 ReturnTextureFromIndex(int2 id, int2 uv){
     return color;
 }
 
+float4 Interpolate2D(float2 id, float2 uv)
+{
+    int2 index = int2(floor((id.x + 8) / 2), floor(id.y + 4));
+    int2 st = int2(floor(uv.x / 16 * LightFieldSize.x), floor(uv.y / 8 * LightFieldSize.y));
+    float2 idRatioWeight = float2(frac((id.x + 8) / 2), frac(id.y + 4));
+    
+    float4 middle = ReturnTextureFromIndex(index, st);
+    float4 left = ReturnTextureFromIndex(index + int2(-1,0), st);
+    float4 top = ReturnTextureFromIndex(index + int2(0,1), st);
+    float4 right = ReturnTextureFromIndex(index + int2(1,0), st);
+    float4 bottom = ReturnTextureFromIndex(index + int2(0, -1), st);
+    
+    middle += left * saturate(.5 - idRatioWeight.x);
+    middle += top * saturate(.5 - (1 - idRatioWeight.y));
+    middle += right * saturate(.5 - (1 - idRatioWeight.x));
+    middle += bottom * saturate(.5 - idRatioWeight.y);
+    
+    middle /= middle.w;
+    
+    return middle;
+}
+
 float3 Shade(inout Ray ray, RayHit hit)
 {
     if (hit.distance < 1.#INF)
     {
-        hit.position.x += 4;
+        hit.position.x += 8;
         hit.position.y += 4;
-        
         /*
-        if (frac(hit.position.x) < 0.05)
+        if (frac(hit.cameraPlaneIndex.x) < 0.05)
         {
             return float3(0, 1.0, 0);
         }
-        if (frac(hit.position.y) < 0.05)
+        if (frac(hit.cameraPlaneIndex.y) < 0.05)
         {
             return float3(1.0, 0, 0);
         }*/
+
         
-        int2 id = int2(floor(hit.cameraPlaneIndex.x + 4), floor(hit.cameraPlaneIndex.y + 4));
-        int2 uv = int2(floor(hit.position.x / 8 * LightFieldSize.x), floor(hit.position.y / 8 * LightFieldSize.y));
+        int2 id = int2(floor( (hit.cameraPlaneIndex.x + 8) / 2), floor(hit.cameraPlaneIndex.y + 4));
+        int2 uv = int2(floor(hit.position.x / 16 * LightFieldSize.x), floor(hit.position.y / 8 * LightFieldSize.y));
 
         float4 tex = ReturnTextureFromIndex(id, uv);
+        //float4 tex = Interpolate2D(hit.cameraPlaneIndex, hit.position.xy);
         return tex.xyz;
         
         //return LightFields[floor(hit.position.x) * LightFieldSize.x * LightFieldSize.y + floor(hit.position.y) * LightFieldSize.x * LightFieldSize.y * 17
