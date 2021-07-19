@@ -111,6 +111,7 @@ Ray CreateCameraRay(float2 uv)
 struct RayHit
 {
     float3 position;
+    int2 cameraPlaneIndex;
     float distance;
     float3 normal;
 };
@@ -120,6 +121,7 @@ RayHit CreateRayHit()
     RayHit hit;
     hit.position = float3(0.0f, 0.0f, 0.0f);
     hit.distance = 1.#INF;
+    hit.cameraPlaneIndex = int2(-1, -1);
     hit.normal = float3(0.0f, 0.0f, 0.0f);
     return hit;
 }
@@ -197,12 +199,351 @@ void IntersectPlane(Ray ray, inout RayHit bestHit, Plane plane)
     bestHit.normal = normal;
 }
 
+void IntersectPlaneWithoutRecordingHitDistance(Ray ray, inout RayHit bestHit, Plane plane)
+{
+    int aIndex = 0;
+    int bIndex = 1;
+    int cIndex = 2;
+    float3 normal = float3(0, 0, 1);
+    if (plane.normalNumber == 0)
+    {
+        aIndex = 2; //z
+        bIndex = 1; //y
+        cIndex = plane.normalNumber;
+        normal = float3(1, 0, 0);
+    }
+    else if (plane.normalNumber == 1)
+    {
+        aIndex = 0; //x
+        bIndex = 2; //z
+        cIndex = plane.normalNumber;
+        normal = float3(0, 1, 0);
+    }
+    else if (plane.normalNumber == 2)
+    {
+        aIndex = 0; //x
+        bIndex = 1; //y
+        cIndex = plane.normalNumber;
+        normal = float3(0, 0, 1);
+    }
+
+    
+    float t = (plane.k - ray.origin[cIndex]) / ray.direction[cIndex];
+    if (t < 0 || t > bestHit.distance)
+    {
+        return;
+    }
+    
+    float x = ray.origin[aIndex] + t * ray.direction[aIndex];
+    float y = ray.origin[bIndex] + t * ray.direction[bIndex];
+    if (x < plane.a0 || x > plane.a1 || y < plane.b0 || y > plane.b1)
+    {
+        return;
+    }
+    
+    //plane.uv = float2((x - plane.a0) / (plane.a1 - plane.a0), (y - plane.b0) / (plane.b1 - plane.b0));
+    
+    //bestHit.distance = t;
+    bestHit.position = ray.origin + t * ray.direction;
+    //bestHit.normal = normal;
+}
+
 RayHit Trace(Ray ray)
 {
     RayHit bestHit = CreateRayHit();
-    Plane plane = CraetePlane(-4, 4, -4, 4, 16, 2);
-    IntersectPlane(ray, bestHit, plane);
+    Plane cameraPlane = CraetePlane(-4, 4, -4, 4, 8, 2);
+    Plane cameraFocalPlane = CraetePlane(-4, 4, -4, 4, 16, 2);
+    IntersectPlaneWithoutRecordingHitDistance(ray, bestHit, cameraPlane);
+    bestHit.cameraPlaneIndex = int2(floor(bestHit.position.x), floor(bestHit.position.y));
+    IntersectPlane(ray, bestHit, cameraFocalPlane);
+    
     return bestHit;
+}
+
+float4 ReturnTextureFromIndex(int2 id, int2 uv){
+    float4 color = float4(id.xy , 0, 1);
+    if (id.y == 0)
+    {
+        if (id.x < 1)
+        {
+            color =  lightField_00_00[uv];
+        }
+        else if (id.x == 1)
+        {
+            color = lightField_00_01[uv];
+        }
+        else if (id.x == 2)
+        {
+            color = lightField_00_02[uv];
+        }
+        else if (id.x == 3)
+        {
+            color = lightField_00_03[uv];
+        }
+        else if (id.x == 4)
+        {
+            color = lightField_00_04[uv];
+        }
+        else if (id.x == 5)
+        {
+            color = lightField_00_05[uv];
+        }
+        else if (id.x == 6)
+        {
+            color = lightField_00_06[uv];
+        }
+        else if (6 < id.x)
+        {
+            color = lightField_00_07[uv];
+        }
+    }
+    else if (id.y == 1)
+    {
+        if (id.x == 0)
+        {
+            color = lightField_01_00[uv];
+        }
+        else if (id.x == 1)
+        {
+            color = lightField_01_01[uv];
+        }
+        else if (id.x == 2)
+        {
+            color = lightField_01_02[uv];
+        }
+        else if (id.x == 3)
+        {
+            color = lightField_01_03[uv];
+        }
+        else if (id.x == 4)
+        {
+            color = lightField_01_04[uv];
+        }
+        else if (id.x == 5)
+        {
+            color = lightField_01_05[uv];
+        }
+        else if (id.x == 6)
+        {
+            color = lightField_01_06[uv];
+        }
+        else if (id.x == 7)
+        {
+            color = lightField_01_07[uv];
+        }
+    }
+    else if (id.y == 2)
+    {
+        if (id.x == 0)
+        {
+            color = lightField_02_00[uv];
+        }
+        else if (id.x == 1)
+        {
+            color = lightField_02_01[uv];
+        }
+        else if (id.x == 2)
+        {
+            color = lightField_02_02[uv];
+        }
+        else if (id.x == 3)
+        {
+            color = lightField_02_03[uv];
+        }
+        else if (id.x == 4)
+        {
+            color = lightField_02_04[uv];
+        }
+        else if (id.x == 5)
+        {
+            color = lightField_02_05[uv];
+        }
+        else if (id.x == 6)
+        {
+            color = lightField_02_06[uv];
+        }
+        else if (id.x == 7)
+        {
+            color = lightField_02_07[uv];
+        }
+    }
+    else if (id.y == 3)
+    {
+        if (id.x == 0)
+        {
+            color = lightField_03_00[uv];
+        }
+        else if (id.x == 1)
+        {
+            color = lightField_03_01[uv];
+        }
+        else if (id.x == 2)
+        {
+            color = lightField_03_02[uv];
+        }
+        else if (id.x == 3)
+        {
+            color = lightField_03_03[uv];
+        }
+        else if (id.x == 4)
+        {
+            color = lightField_03_04[uv];
+        }
+        else if (id.x == 5)
+        {
+            color = lightField_03_05[uv];
+        }
+        else if (id.x == 6)
+        {
+            color = lightField_03_06[uv];
+        }
+        else if (id.x == 7)
+        {
+            color = lightField_03_07[uv];
+        }
+    }
+    else if (id.y == 4)
+    {
+        if (id.x == 0)
+        {
+            color = lightField_04_00[uv];
+        }
+        else if (id.x == 1)
+        {
+            color = lightField_04_01[uv];
+        }
+        else if (id.x == 2)
+        {
+            color = lightField_04_02[uv];
+        }
+        else if (id.x == 3)
+        {
+            color = lightField_04_03[uv];
+        }
+        else if (id.x == 4)
+        {
+            color = lightField_04_04[uv];
+        }
+        else if (id.x == 5)
+        {
+            color = lightField_04_05[uv];
+        }
+        else if (id.x == 6)
+        {
+            color = lightField_04_06[uv];
+        }
+        else if (id.x == 7)
+        {
+            color = lightField_04_07[uv];
+        }
+    }
+    else if (id.y == 5)
+    {
+        if (id.x == 0)
+        {
+            color = lightField_05_00[uv];
+        }
+        else if (id.x == 1)
+        {
+            color = lightField_05_01[uv];
+        }
+        else if (id.x == 2)
+        {
+            color = lightField_05_02[uv];
+        }
+        else if (id.x == 3)
+        {
+            color = lightField_05_03[uv];
+        }
+        else if (id.x == 4)
+        {
+            color = lightField_05_04[uv];
+        }
+        else if (id.x == 5)
+        {
+            color = lightField_05_05[uv];
+        }
+        else if (id.x == 6)
+        {
+            color = lightField_05_06[uv];
+        }
+        else if (id.x == 7)
+        {
+            color = lightField_05_07[uv];
+        }
+    }
+    else if (id.y == 6)
+    {
+        if (id.x == 0)
+        {
+            color = lightField_06_00[uv];
+        }
+        else if (id.x == 1)
+        {
+            color = lightField_06_01[uv];
+        }
+        else if (id.x == 2)
+        {
+            color = lightField_06_02[uv];
+        }
+        else if (id.x == 3)
+        {
+            color = lightField_06_03[uv];
+        }
+        else if (id.x == 4)
+        {
+            color = lightField_06_04[uv];
+        }
+        else if (id.x == 5)
+        {
+            color = lightField_06_05[uv];
+        }
+        else if (id.x == 6)
+        {
+            color = lightField_06_06[uv];
+        }
+        else if (id.x == 7)
+        {
+            color = lightField_06_07[uv];
+        }
+    }
+    else if (id.y == 7)
+    {
+        if (id.x == 0)
+        {
+            color = lightField_07_00[uv];
+        }
+        else if (id.x == 1)
+        {
+            color = lightField_07_01[uv];
+        }
+        else if (id.x == 2)
+        {
+            color = lightField_07_02[uv];
+        }
+        else if (id.x == 3)
+        {
+            color = lightField_07_03[uv];
+        }
+        else if (id.x == 4)
+        {
+            color = lightField_07_04[uv];
+        }
+        else if (id.x == 5)
+        {
+            color = lightField_07_05[uv];
+        }
+        else if (id.x == 6)
+        {
+            color = lightField_07_06[uv];
+        }
+        else if (id.x == 7)
+        {
+            color = lightField_07_07[uv];
+        }
+    }
+    
+    return color;
 }
 
 float3 Shade(inout Ray ray, RayHit hit)
@@ -212,6 +553,7 @@ float3 Shade(inout Ray ray, RayHit hit)
         hit.position.x += 4;
         hit.position.y += 4;
         
+        /*
         if (frac(hit.position.x) < 0.05)
         {
             return float3(0, 1.0, 0);
@@ -219,290 +561,14 @@ float3 Shade(inout Ray ray, RayHit hit)
         if (frac(hit.position.y) < 0.05)
         {
             return float3(1.0, 0, 0);
-        }
+        }*/
         
-        int2 index = int2(floor(hit.position.x / 8 * LightFieldSize.x), floor(hit.position.y / 8 * LightFieldSize.y));
-        if (floor(hit.position.y) < 1)
-        {
-            if (floor(hit.position.x) < 1)
-            {
-                return lightField_00_00[index].xyz;
-            }
-            else if (floor(hit.position.x) < 2)
-            {
-                return lightField_00_01[index].xyz;
-            }
-            else if (floor(hit.position.x) < 3)
-            {
-                return lightField_00_02[index].xyz;
-            }
-            else if (floor(hit.position.x) < 4)
-            {
-                return lightField_00_03[index].xyz;
-            }
-            else if (floor(hit.position.x) < 5)
-            {
-                return lightField_00_04[index].xyz;
-            }
-            else if (floor(hit.position.x) < 6)
-            {
-                return lightField_00_05[index].xyz;
-            }
-            else if (floor(hit.position.x) < 7)
-            {
-                return lightField_00_06[index].xyz;
-            }
-            else if (floor(hit.position.x) < 8)
-            {
-                return lightField_00_07[index].xyz;
-            }
-        }
-        else if (floor(hit.position.y) < 2)
-        {
-            if (floor(hit.position.x) < 1)
-            {
-                return lightField_01_00[index].xyz;
-            }
-            else if (floor(hit.position.x) < 2)
-            {
-                return lightField_01_01[index].xyz;
-            }
-            else if (floor(hit.position.x) < 3)
-            {
-                return lightField_01_02[index].xyz;
-            }
-            else if (floor(hit.position.x) < 4)
-            {
-                return lightField_01_03[index].xyz;
-            }
-            else if (floor(hit.position.x) < 5)
-            {
-                return lightField_01_04[index].xyz;
-            }
-            else if (floor(hit.position.x) < 6)
-            {
-                return lightField_01_05[index].xyz;
-            }
-            else if (floor(hit.position.x) < 7)
-            {
-                return lightField_01_06[index].xyz;
-            }
-            else if (floor(hit.position.x) < 8)
-            {
-                return lightField_01_07[index].xyz;
-            }
-        }
-        else if (floor(hit.position.y) < 3)
-        {
-            if (floor(hit.position.x) < 1)
-            {
-                return lightField_02_00[index].xyz;
-            }
-            else if (floor(hit.position.x) < 2)
-            {
-                return lightField_02_01[index].xyz;
-            }
-            else if (floor(hit.position.x) < 3)
-            {
-                return lightField_02_02[index].xyz;
-            }
-            else if (floor(hit.position.x) < 4)
-            {
-                return lightField_02_03[index].xyz;
-            }
-            else if (floor(hit.position.x) < 5)
-            {
-                return lightField_02_04[index].xyz;
-            }
-            else if (floor(hit.position.x) < 6)
-            {
-                return lightField_02_05[index].xyz;
-            }
-            else if (floor(hit.position.x) < 7)
-            {
-                return lightField_02_06[index].xyz;
-            }
-            else if (floor(hit.position.x) < 8)
-            {
-                return lightField_02_07[index].xyz;
-            }
+        int2 id = int2(floor(hit.cameraPlaneIndex.x + 4), floor(hit.cameraPlaneIndex.y + 4));
+        int2 uv = int2(floor(hit.position.x / 8 * LightFieldSize.x), floor(hit.position.y / 8 * LightFieldSize.y));
 
-        }
-        else if (floor(hit.position.y) < 4)
-        {
-            if (floor(hit.position.x) < 1)
-            {
-                return lightField_03_00[index].xyz;
-            }
-            else if (floor(hit.position.x) < 2)
-            {
-                return lightField_03_01[index].xyz;
-            }
-            else if (floor(hit.position.x) < 3)
-            {
-                return lightField_03_02[index].xyz;
-            }
-            else if (floor(hit.position.x) < 4)
-            {
-                return lightField_03_03[index].xyz;
-            }
-            else if (floor(hit.position.x) < 5)
-            {
-                return lightField_03_04[index].xyz;
-            }
-            else if (floor(hit.position.x) < 6)
-            {
-                return lightField_03_05[index].xyz;
-            }
-            else if (floor(hit.position.x) < 7)
-            {
-                return lightField_03_06[index].xyz;
-            }
-            else if (floor(hit.position.x) < 8)
-            {
-                return lightField_03_07[index].xyz;
-            }
-        }
-        else if (floor(hit.position.y) < 5)
-        {
-            if (floor(hit.position.x) < 1)
-            {
-                return lightField_04_00[index].xyz;
-            }
-            else if (floor(hit.position.x) < 2)
-            {
-                return lightField_04_01[index].xyz;
-            }
-            else if (floor(hit.position.x) < 3)
-            {
-                return lightField_04_02[index].xyz;
-            }
-            else if (floor(hit.position.x) < 4)
-            {
-                return lightField_04_03[index].xyz;
-            }
-            else if (floor(hit.position.x) < 5)
-            {
-                return lightField_04_04[index].xyz;
-            }
-            else if (floor(hit.position.x) < 6)
-            {
-                return lightField_04_05[index].xyz;
-            }
-            else if (floor(hit.position.x) < 7)
-            {
-                return lightField_04_06[index].xyz;
-            }
-            else if (floor(hit.position.x) < 8)
-            {
-                return lightField_04_07[index].xyz;
-            }
-        }
-        else if (floor(hit.position.y) < 6)
-        {
-            if (floor(hit.position.x) < 1)
-            {
-                return lightField_05_00[index].xyz;
-            }
-            else if (floor(hit.position.x) < 2)
-            {
-                return lightField_05_01[index].xyz;
-            }
-            else if (floor(hit.position.x) < 3)
-            {
-                return lightField_05_02[index].xyz;
-            }
-            else if (floor(hit.position.x) < 4)
-            {
-                return lightField_05_03[index].xyz;
-            }
-            else if (floor(hit.position.x) < 5)
-            {
-                return lightField_05_04[index].xyz;
-            }
-            else if (floor(hit.position.x) < 6)
-            {
-                return lightField_05_05[index].xyz;
-            }
-            else if (floor(hit.position.x) < 7)
-            {
-                return lightField_05_06[index].xyz;
-            }
-            else if (floor(hit.position.x) < 8)
-            {
-                return lightField_05_07[index].xyz;
-            }
-        }
-        else if (floor(hit.position.y) < 7)
-        {
-            if (floor(hit.position.x) < 1)
-            {
-                return lightField_06_00[index].xyz;
-            }
-            else if (floor(hit.position.x) < 2)
-            {
-                return lightField_06_01[index].xyz;
-            }
-            else if (floor(hit.position.x) < 3)
-            {
-                return lightField_06_02[index].xyz;
-            }
-            else if (floor(hit.position.x) < 4)
-            {
-                return lightField_06_03[index].xyz;
-            }
-            else if (floor(hit.position.x) < 5)
-            {
-                return lightField_06_04[index].xyz;
-            }
-            else if (floor(hit.position.x) < 6)
-            {
-                return lightField_06_05[index].xyz;
-            }
-            else if (floor(hit.position.x) < 7)
-            {
-                return lightField_06_06[index].xyz;
-            }
-            else if (floor(hit.position.x) < 8)
-            {
-                return lightField_06_07[index].xyz;
-            }
-        }
-        else if (floor(hit.position.y) < 8)
-        {
-            if (floor(hit.position.x) < 1)
-            {
-                return lightField_07_00[index].xyz; //
-            }
-            else if (floor(hit.position.x) < 2)
-            {
-                return lightField_07_01[index].xyz; //
-            }
-            else if (floor(hit.position.x) < 3)
-            {
-                return lightField_07_02[index].xyz; //
-            }
-            else if (floor(hit.position.x) < 4)
-            {
-                return lightField_07_03[index].xyz; //
-            }
-            else if (floor(hit.position.x) < 5)
-            {
-                return lightField_07_04[index].xyz; //
-            }
-            else if (floor(hit.position.x) < 6)
-            {
-                return lightField_07_05[index].xyz; //
-            }
-            else if (floor(hit.position.x) < 7)
-            {
-                return lightField_07_06[index].xyz; //
-            }
-            else if (floor(hit.position.x) < 8)
-            {
-                return lightField_07_07[index].xyz; //
-            }
-        }
+        float4 tex = ReturnTextureFromIndex(id, uv);
+        return tex.xyz;
+        
         //return LightFields[floor(hit.position.x) * LightFieldSize.x * LightFieldSize.y + floor(hit.position.y) * LightFieldSize.x * LightFieldSize.y * 17
         //+ floor(frac(hit.position.x) * LightFieldSize.x) + floor(frac(hit.position.y) * LightFieldSize.y) * LightFieldSize.x].xyz;
         
