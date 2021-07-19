@@ -52,7 +52,7 @@ public class DrawOnCamera : MonoBehaviour
             {
                 for(int j = 0; j < 8; j++)
                 {
-                    Debug.Log("lightField_" + i.ToString("00") + "_" + j.ToString("00") );
+                    //Debug.Log("lightField_" + i.ToString("00") + "_" + j.ToString("00") );
                     _renderShader.SetTexture(0, "lightField_" + i.ToString("00") + "_" + j.ToString("00"), assetTextures[i * uvSideCount + j]);
                 }
             } 
