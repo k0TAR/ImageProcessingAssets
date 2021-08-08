@@ -9,7 +9,6 @@ public class Dilation : MonoBehaviour
     [SerializeField] RawImage _afterImage = null;
 
     [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField] private Texture _tex = null;
 
     [SerializeField] [Range(1, 20)] private int _dilationIteration = 2;
 
@@ -25,9 +24,9 @@ public class Dilation : MonoBehaviour
 
     private void OnValidate()
     {
-        if (!ComputeShaderApplier.IsInitializationEnough(ref _beforeImage, ref _afterImage, ref _tex, this)) return;
+        if (!ComputeShaderApplier.IsInitializationEnough(ref _beforeImage, ref _afterImage, this)) return;
 
-        var result = ComputeShaderApplier.RunComputeShader(_computeShader, _tex);
+        var result = ComputeShaderApplier.RunComputeShader(_computeShader, _beforeImage.texture);
         for (int i = 1; i < _dilationIteration; i++)
         {
             result = ComputeShaderApplier.RunComputeShader(_computeShader, result);

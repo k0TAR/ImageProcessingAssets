@@ -28,7 +28,7 @@ public class BilateralFilter : MonoBehaviour
 
     private void OnValidate()
     {
-        if (!ComputeShaderApplier.IsInitializationEnough(ref _beforeImage, ref _afterImage, ref _tex, this)) return;
+        if (!ComputeShaderApplier.IsInitializationEnough(ref _beforeImage, ref _afterImage, this)) return;
 
 
         float[] filter = new float[_filterSize * _filterSize];
@@ -54,7 +54,7 @@ public class BilateralFilter : MonoBehaviour
         computeShaderParams.Add("Weight", weight);
         computeShaderParams.Add("Sigma", _sigmaIntensity);
 
-        var result = ComputeShaderApplier.RunComputeShader(_computeShader, _tex, computeShaderParams); ; 
+        var result = ComputeShaderApplier.RunComputeShader(_computeShader, _beforeImage.texture, computeShaderParams); ; 
         for(int i = 1; i < _bfIteration; i++)
         {
             result = ComputeShaderApplier.RunComputeShader(_computeShader, result, computeShaderParams);

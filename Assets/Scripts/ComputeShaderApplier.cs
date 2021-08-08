@@ -31,18 +31,12 @@ public static class ComputeShaderApplier
     public static bool IsInitializationEnough(
         ref RawImage beforeImage, 
         ref RawImage afterImage, 
-        ref Texture usingTexture, 
         Object usingClass)
     {
         if (beforeImage == null)
         {
             Debug.Log($"SET BEFORE RAWIMAGE OR TEXTURE IN {usingClass.name}.");
             return false;
-        }
-        else if (usingTexture == null && beforeImage != null)
-        {
-            usingTexture = beforeImage.texture;
-
         }
 
 
