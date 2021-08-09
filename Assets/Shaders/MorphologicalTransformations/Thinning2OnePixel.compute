@@ -47,7 +47,7 @@ int3x3 filter2[8] =
     )
 };
 //added 4 more for filter3
-int3x3 filter3[16] =
+int3x3 filter3[12] =
 {
     int3x3(
         1, 1, 1,
@@ -57,8 +57,7 @@ int3x3 filter3[16] =
         0, 1, 1,
         0, 1, 1,
         0, 0, 0
-    ),
-    int3x3(
+    ),int3x3(
         0, 0, 1,
         0, 1, 1,
         0, 0, 1
@@ -82,15 +81,27 @@ int3x3 filter3[16] =
         1, 1, 0,
         1, 1, 0,
         0, 0, 0
-    ), int3x3(
+    ), 
+    int3x3(
         0, 1, 0,
         1, 1, 0,
         1, 0, 0
+    ), int3x3(
+        0, 1, 0,
+        0, 1, 1,
+        0, 0, 1
     ), int3x3(
         1, 1, 0,
         0, 1, 1,
         0, 0, 0
     ), int3x3(
+        0, 1, 1,
+        1, 1, 0,
+        0, 0, 0
+    ),
+    //
+    /*
+     int3x3(
         0, 0, 1,
         0, 1, 1,
         0, 1, 0
@@ -103,21 +114,13 @@ int3x3 filter3[16] =
         1, 1, 0,
         0, 1, 0
     ), int3x3(
-        0, 1, 1,
-        1, 1, 0,
-        0, 0, 0
-    ), int3x3(
-        0, 1, 0,
-        0, 1, 1,
-        0, 0, 1
-    ), int3x3(
         0, 0, 0,
         0, 1, 1,
         1, 1, 0
-    )
+    )*/
 };
 //added 2 more for filter4
-int3x3 filter4[12] =
+int3x3 filter4[10] =
 {
     int3x3(
         1, 1, 1,
@@ -163,7 +166,9 @@ int3x3 filter4[12] =
         1, 1, 0,
         0, 1, 1,
         0, 0, 1
-    ), int3x3(
+    ),
+    /*
+    int3x3(
         0, 0, 1,
         0, 1, 1,
         1, 1, 0
@@ -171,7 +176,7 @@ int3x3 filter4[12] =
         1, 0, 0,
         1, 1, 0,
         0, 1, 1
-    )
+    )*/
 };
 
 int3x3 filter5[8] =
@@ -291,36 +296,7 @@ int3x3 filter7[4] =
     ),
 };
 
-/*
-bool Elimination(int2 pos, int3x3 filters[], int filter_size)
-{
-    bool eliminate = false;
-    
-    for (int k = 0; k < filter_size; k++)
-    {
-        bool matchs_filter = false;
-        for (int i = -1; i < 2; i++)
-        {
-            for (int j = -1; j < 2; j++)
-            {
-                if (Input[pos.xy + int2(i, j)].x == filters[k][i + 1][j + 1])
-                {
-                    matchs_filter &= true;
-                }
-                else
-                {
-                    matchs_filter &= false;
-                }
-            }
-        }
-        
-        //just needs to match the eight neighbour with one filter.
-        eliminate |= matchs_filter;
-    }
-    
-    return eliminate;
-}
-*/
+
 
 int Count8NeighboursWithSetBits(int2 pos)
 {
@@ -396,25 +372,157 @@ bool NoEliminationRules(int2 pos)
 {
     bool no_eliminate = false;
     bool matchs_filter = true;
+   
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == no_elim_1[0][1]);
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == no_elim_1[1][0]);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == no_elim_1[1][1]);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == no_elim_1[1][2]);
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, -1)].x == no_elim_1[2][0]);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == no_elim_1[2][1]);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, -1)].x == no_elim_1[2][2]);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -2)].x == no_elim_1[3][1]);
+    
+    no_eliminate = no_eliminate | matchs_filter;
+    
+    
+    matchs_filter = true;
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 2)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 2)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 1)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, -1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 0);
+    
+    no_eliminate = no_eliminate | matchs_filter;
+    
+    
+    matchs_filter = true;
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 2)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 2)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 1)].x ==0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 1)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 1);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, -1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 0);
+    
+    no_eliminate = no_eliminate | matchs_filter;
+    
+    
+    matchs_filter = true;
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, 1)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, 0)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, -1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, -1)].x == 1);
+
+    
+    no_eliminate = no_eliminate | matchs_filter;
+    
+    
+    matchs_filter = true;
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 1)].x == 1);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, 0)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, -1)].x == 1);
+
+    
+    no_eliminate = no_eliminate | matchs_filter;
+    
+    
+    matchs_filter = true;
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 1)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, 0)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, -1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, -1)].x == 0);
+
+    
+    no_eliminate = no_eliminate | matchs_filter;
+    
+    
+    matchs_filter = true;
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, 1)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, 0)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, -1)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, -1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, -1)].x == 0);
+   
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, -2)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -2)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, -2)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(2, -2)].x == 0);
+    
+    no_eliminate = no_eliminate | matchs_filter;
+    /*
     int i = 0;
     int j = 0;
+    
     
     for (i = 1; i > -3 & matchs_filter; i--)
     {
         for (j = -1; j < 2 & matchs_filter; j++)
         {
-            if (no_elim_2[i * -1 + 1][j + 1] == -1)
+            if (no_elim_1[i * -1 + 1][j + 1] < 0)
                 continue;
             matchs_filter = matchs_filter & (Input[pos + int2(j, i)].x == no_elim_1[i * -1 + 1][j + 1]);
         }
     }
     no_eliminate = no_eliminate | matchs_filter;
     
+    
     for (i = 2; i > -2 & matchs_filter; i--)
     {
         for (j = -1; j < 3 & matchs_filter; j++)
         {
-            if (no_elim_2[i * -1 + 2][j + 1] == -1)
+            if (no_elim_2[i * -1 + 2][j + 1] < 0)
                 continue;
             matchs_filter = matchs_filter & (Input[pos + int2(j, i)].x == no_elim_2[i * -1 + 2][j + 1]);
         }
@@ -425,7 +533,7 @@ bool NoEliminationRules(int2 pos)
     {
         for (j = -1; j < 2 & matchs_filter; j++)
         {
-            if (no_elim_2[i * -1 + 1][j + 1] == -1)
+            if (no_elim_3[i * -1 + 1][j + 1] < 0)
                 continue;
             matchs_filter = matchs_filter & (Input[pos + int2(j, i)].x == no_elim_3[i * -1 + 1][j + 1]);
         }
@@ -436,7 +544,7 @@ bool NoEliminationRules(int2 pos)
     {
         for (j = -1; j < 3 & matchs_filter; j++)
         {
-            if (no_elim_2[i * -1 + 1][j + 1] == -1)
+            if (no_elim_4[i * -1 + 1][j + 1] < 0)
                 continue;
             matchs_filter = matchs_filter & (Input[pos + int2(j, i)].x == no_elim_4[i * -1 + 1][j + 1]);
         }
@@ -447,7 +555,7 @@ bool NoEliminationRules(int2 pos)
     {
         for (j = -1; j < 3 & matchs_filter; j++)
         {
-            if (no_elim_2[i * -1 + 1][j + 1] == -1)
+            if (no_elim_5[i * -1 + 1][j + 1] < 0)
                 continue;
             matchs_filter = matchs_filter & (Input[pos + int2(j, i)].x == no_elim_5[i * -1 + 1][j + 1]);
         }
@@ -458,7 +566,7 @@ bool NoEliminationRules(int2 pos)
     {
         for (j = -2; j < 2 & matchs_filter; j++)
         {
-            if (no_elim_2[i * -1 + 1][j + 2] == -1)
+            if (no_elim_6[i * -1 + 1][j + 2] < 0)
                 continue;
             matchs_filter = matchs_filter & (Input[pos + int2(j, i)].x == no_elim_6[i * -1 + 1][j + 2]);
         }
@@ -469,12 +577,13 @@ bool NoEliminationRules(int2 pos)
     {
         for (j = -1; j < 3 & matchs_filter; j++)
         {
-            if (no_elim_2[i * -1 + 1][j + 1] == -1)
+            if (no_elim_7[i * -1 + 1][j + 1] < 0)
                 continue;
             matchs_filter = matchs_filter & (Input[pos + int2(j, i)].x == no_elim_7[i * -1 + 1][j + 1]);
         }
     }
     no_eliminate = no_eliminate | matchs_filter;
+    */
     
     return no_eliminate;
 }
@@ -525,7 +634,7 @@ bool EliminationRules(int2 pos)
     {
         
         
-        for (int k = 0; k < 16; k++)
+        for (int k = 0; k < 12; k++)
         {
             matchs_filter = true;
             for (int i = 1; i > -1 & matchs_filter; i--)
@@ -551,7 +660,7 @@ bool EliminationRules(int2 pos)
     {
                 
         
-        for (int k = 0; k < 12; k++)
+        for (int k = 0; k < 10; k++)
         {
             matchs_filter = true;
             for (int i = 1; i > -1 & matchs_filter; i--)
@@ -674,13 +783,13 @@ void Thinning2OnePixel(uint3 id : SV_DispatchThreadID)
         {
             Result[id.xy] = int4(0, 0, 1, !AlphaOn);
         }
-        else if (!EliminationRules(id.xy) & NoEliminationRules(id.xy))
+        else if (EliminationRules(id.xy) & NoEliminationRules(id.xy))
         {
             Result[id.xy] = int4(1, 0, 0, 1);
         }
-        else
+        else if (!EliminationRules(id.xy))
         {
-            Result[id.xy] = int4(0, 1, 0, 1);
+            Result[id.xy] = int4(1, 1, 0, 1);
         }
     }
     
