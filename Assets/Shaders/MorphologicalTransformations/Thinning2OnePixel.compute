@@ -1,0 +1,525 @@
+﻿//Implemented algorithm can be found from below.
+//Christopher M. Holt, Alan Stewart, Maurice Clint, and Ronald H. Perrott. 
+//1987. An improved parallel thinning algorithm. Commun. ACM 30, 2 (Feb. 1987), 156–160. 
+//DOI:https://doi.org/10.1145/12527.12531
+#pragma kernel Thinning2OnePixel
+
+Texture2D<int4> Input;
+RWTexture2D<int4> Result;
+
+int3x3 filter2[8] =
+{
+    int3x3(
+        1, 1, 0,
+        0, 1, 0,
+        0, 0, 0
+    ), int3x3(
+        0, 0, 1,
+        0, 1, 1,
+        0, 0, 0
+    ), int3x3(
+        0, 0, 0,
+        0, 1, 0,
+        0, 1, 1
+    ), int3x3(
+        0, 0, 0,
+        1, 1, 0,
+        1, 0, 0
+    ),
+    //
+    int3x3(
+        0, 1, 1,
+        0, 1, 0,
+        0, 0, 0
+    ), int3x3(
+        0, 0, 0,
+        0, 1, 1,
+        0, 0, 1
+    ), int3x3(
+        0, 0, 0,
+        0, 1, 0,
+        1, 1, 0
+    ), int3x3(
+        1, 0, 0,
+        1, 1, 0,
+        0, 0, 0
+    )
+};
+//added 4 more for filter3
+int3x3 filter3[16] =
+{
+    int3x3(
+        1, 1, 1,
+        0, 1, 0,
+        0, 0, 0
+    ), int3x3(
+        0, 1, 1,
+        0, 1, 1,
+        0, 0, 0
+    ),
+    int3x3(
+        0, 0, 1,
+        0, 1, 1,
+        0, 0, 1
+    ), int3x3(
+        0, 0, 0,
+        0, 1, 1,
+        0, 1, 1
+    ), int3x3(
+        0, 0, 0,
+        0, 1, 0,
+        1, 1, 1
+    ), int3x3(
+        0, 0, 0,
+        1, 1, 0,
+        1, 1, 0
+    ), int3x3(
+        1, 0, 0,
+        1, 1, 0,
+        1, 0, 0
+    ), int3x3(
+        1, 1, 0,
+        1, 1, 0,
+        0, 0, 0
+    ), int3x3(
+        0, 1, 0,
+        1, 1, 0,
+        1, 0, 0
+    ), int3x3(
+        1, 1, 0,
+        0, 1, 1,
+        0, 0, 0
+    ), int3x3(
+        0, 0, 1,
+        0, 1, 1,
+        0, 1, 0
+    ), int3x3(
+        0, 0, 0,
+        1, 1, 0,
+        0, 1, 1
+    ), int3x3(
+        1, 0, 0,
+        1, 1, 0,
+        0, 1, 0
+    ), int3x3(
+        0, 1, 1,
+        1, 1, 0,
+        0, 0, 0
+    ), int3x3(
+        0, 1, 0,
+        0, 1, 1,
+        0, 0, 1
+    ), int3x3(
+        0, 0, 0,
+        0, 1, 1,
+        1, 1, 0
+    )
+};
+//added 2 more for filter4
+int3x3 filter4[12] =
+{
+    int3x3(
+        1, 1, 1,
+        0, 1, 1,
+        0, 0, 0
+    ), int3x3(
+        0, 0, 1,
+        0, 1, 1,
+        0, 1, 1
+    ), int3x3(
+        0, 0, 0,
+        1, 1, 0,
+        1, 1, 1
+    ), int3x3(
+        1, 1, 0,
+        1, 1, 0,
+        1, 0, 0
+    ),
+    //
+    int3x3(
+        1, 1, 1,
+        1, 1, 0,
+        0, 0, 0
+    ), int3x3(
+        0, 1, 1,
+        0, 1, 1,
+        0, 0, 1
+    ), int3x3(
+        0, 0, 0,
+        0, 1, 1,
+        1, 1, 1
+    ), int3x3(
+        1, 0, 0,
+        1, 1, 0,
+        1, 1, 0
+    ),
+    //
+    int3x3(
+        0, 1, 1,
+        1, 1, 0,
+        1, 0, 0
+    ), int3x3(
+        1, 1, 0,
+        0, 1, 1,
+        0, 0, 1
+    ), int3x3(
+        0, 0, 1,
+        0, 1, 1,
+        1, 1, 0
+    ), int3x3(
+        1, 0, 0,
+        1, 1, 0,
+        0, 1, 1
+    )
+};
+
+int3x3 filter5[8] =
+{
+    int3x3(
+        1, 1, 1,
+        0, 1, 1,
+        0, 0, 1
+    ), int3x3(
+        0, 0, 1,
+        0, 1, 1,
+        1, 1, 1
+    ), int3x3(
+        1, 0, 0,
+        1, 1, 0,
+        1, 1, 1
+    ), int3x3(
+        1, 1, 1,
+        1, 1, 0,
+        1, 0, 0
+    ),
+    //
+    int3x3(
+        1, 1, 1,
+        1, 1, 1,
+        0, 0, 0
+    ), int3x3(
+        0, 1, 1,
+        0, 1, 1,
+        0, 1, 1
+    ), int3x3(
+        0, 0, 0,
+        1, 1, 1,
+        1, 1, 1
+    ), int3x3(
+        1, 1, 0,
+        1, 1, 0,
+        1, 1, 0
+    ),
+    /*
+    int3x3(
+        1, 1, 0,
+        1, 1, 0,
+        0, 1, 1
+    ), int3x3(
+        0, 1, 1,
+        1, 1, 1,
+        1, 0, 0
+    ), int3x3(
+        1, 1, 0,
+        0, 1, 1,
+        0, 1, 1
+    ), int3x3(
+        0, 0, 1,
+        1, 1, 1,
+        1, 1, 0
+    ),*/
+};
+
+int3x3 filter6[8] =
+{
+    int3x3(
+        1, 1, 1,
+        1, 1, 1,
+        0, 0, 1
+    ), int3x3(
+        0, 1, 1,
+        0, 1, 1,
+        1, 1, 1
+    ), int3x3(
+        1, 0, 0,
+        1, 1, 1,
+        1, 1, 1
+    ), int3x3(
+        1, 1, 1,
+        1, 1, 0,
+        1, 1, 0
+    ),
+    //
+    int3x3(
+        1, 1, 1,
+        1, 1, 1,
+        1, 0, 0
+    ), int3x3(
+        1, 1, 1,
+        0, 1, 1,
+        0, 1, 1
+    ), int3x3(
+        0, 0, 1,
+        1, 1, 1,
+        1, 1, 1
+    ), int3x3(
+        1, 1, 0,
+        1, 1, 0,
+        1, 1, 1
+    ),
+};
+
+int3x3 filter7[4] =
+{
+    int3x3(
+        1, 1, 1,
+        1, 1, 1,
+        1, 0, 1
+    ), int3x3(
+        1, 1, 1,
+        0, 1, 1,
+        1, 1, 1
+    ), int3x3(
+        1, 0, 1,
+        1, 1, 1,
+        1, 1, 1
+    ), int3x3(
+        1, 1, 1,
+        1, 1, 0,
+        1, 1, 1
+    ),
+};
+
+/*
+bool Elimination(int2 pos, int3x3 filters[], int filter_size)
+{
+    bool eliminate = false;
+    
+    for (int k = 0; k < filter_size; k++)
+    {
+        bool matchs_filter = false;
+        for (int i = -1; i < 2; i++)
+        {
+            for (int j = -1; j < 2; j++)
+            {
+                if (Input[pos.xy + int2(i, j)].x == filters[k][i + 1][j + 1])
+                {
+                    matchs_filter &= true;
+                }
+                else
+                {
+                    matchs_filter &= false;
+                }
+            }
+        }
+        
+        //just needs to match the eight neighbour with one filter.
+        eliminate |= matchs_filter;
+    }
+    
+    return eliminate;
+}
+*/
+
+int Count8NeighbourWithSetBits(int2 pos)
+{
+    int amount = 0;
+    for (int i = -1; i < 2; i++)
+    {
+        for (int j = -1; j < 2; j++)
+        {
+            if (i == 0 && j == 0)
+            {
+                continue;
+            }
+            amount += Input[pos.xy + int2(i, j)].x;
+        }
+    }
+    return amount;
+}
+
+bool EliminationRules(int2 pos)
+{
+    int amount = Count8NeighbourWithSetBits(pos);
+    
+    bool eliminate = false;
+    bool matchs_filter = false;
+    
+    //amount == 0, 1, 8: no elimination
+    if (amount == 0)
+    {
+        return false;
+    }
+    else if (amount == 1)
+    {
+        return false;
+    }
+    else if (amount == 2)
+    {
+    
+        
+        for (int k = 0; k < 8; k++)
+        {
+            matchs_filter = false;
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    matchs_filter = matchs_filter & (Input[pos.xy + int2(i, j)].x == filter2[k][i + 1][j + 1]);
+                }
+            }
+        
+            //just needs to match the eight neighbour with one filter.
+            eliminate = eliminate | matchs_filter;
+        }
+
+        return eliminate;
+        
+        
+    }
+    else if (amount == 3)
+    {
+        
+        
+        for (int k = 0; k < 16; k++)
+        {
+            matchs_filter = false;
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    matchs_filter = matchs_filter & (Input[pos.xy + int2(i, j)].x == filter3[k][i + 1][j + 1]);
+                }
+            }
+        
+            //just needs to match the eight neighbour with one filter.
+            eliminate = eliminate | matchs_filter;
+        }
+
+        return eliminate;
+        
+        
+    }
+    else if (amount == 4)
+    {
+                
+        
+        for (int k = 0; k < 12; k++)
+        {
+            matchs_filter = false;
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    matchs_filter = matchs_filter & (Input[pos.xy + int2(i, j)].x == filter4[k][i + 1][j + 1]);
+                }
+            }
+        
+            //just needs to match the eight neighbour with one filter.
+            eliminate = eliminate | matchs_filter;
+        }
+
+        return eliminate;
+        
+        
+    }
+    else if (amount == 5)
+    {
+                
+        
+        for (int k = 0; k < 8; k++)
+        {
+            matchs_filter = false;
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    matchs_filter = matchs_filter & (Input[pos.xy + int2(i, j)].x == filter5[k][i + 1][j + 1]);
+                }
+            }
+        
+            //just needs to match the eight neighbour with one filter.
+            eliminate = eliminate | matchs_filter;
+        }
+
+        return eliminate;
+        
+        
+    }
+    else if (amount == 6)
+    {
+                
+        
+        for (int k = 0; k < 8; k++)
+        {
+            matchs_filter = false;
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    matchs_filter = matchs_filter & (Input[pos.xy + int2(i, j)].x == filter6[k][i + 1][j + 1]);
+                }
+            }
+        
+            //just needs to match the eight neighbour with one filter.
+            eliminate = eliminate | matchs_filter;
+        }
+
+        return eliminate;
+        
+        
+    }
+    else if (amount == 7)
+    {
+               
+        
+        for (int k = 0; k < 4; k++)
+        {
+            matchs_filter = false;
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    matchs_filter = matchs_filter & (Input[pos.xy + int2(i, j)].x == filter7[k][i + 1][j + 1]);
+                }
+            }
+        
+            //just needs to match the eight neighbour with one filter.
+            eliminate = eliminate | matchs_filter;
+        }
+
+        return eliminate;
+        
+        
+    }
+    else if (amount == 8)
+    {
+        return false;
+    }
+
+    return false;
+}
+
+
+    
+
+[numthreads(8, 8, 1)]
+void Thinning2OnePixel(uint3 id : SV_DispatchThreadID)
+{
+    //exclude Input[id.xy] == 0 first, to not run the elimination rule for optimization
+    if (Input[id.xy].x == 0)
+    {
+        //int4(0, 0, 0, 0)
+        Result[id.xy] = Input[id.xy];
+    }
+    
+    if (EliminationRules(id.xy))
+    {
+        Result[id.xy] = int4(0, 0, 0, 0);
+    }
+    else
+    {
+        //int4(1, 1, 1, 1)
+        Result[id.xy] = Input[id.xy];
+    }
+}
