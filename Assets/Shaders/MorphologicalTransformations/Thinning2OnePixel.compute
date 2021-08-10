@@ -8,7 +8,7 @@ bool AlphaOn;
 Texture2D<float4> Input;
 RWTexture2D<float4> Result;
 
-int3x3 filter2[8] =
+static int3x3 filter2[8] =
 {
     int3x3(
         1, 1, 0,
@@ -47,7 +47,7 @@ int3x3 filter2[8] =
     )
 };
 //added 4 more for filter3
-int3x3 filter3[12] =
+static int3x3 filter3[12] =
 {
     int3x3(
         1, 1, 1,
@@ -120,7 +120,7 @@ int3x3 filter3[12] =
     )*/
 };
 //added 2 more for filter4
-int3x3 filter4[10] =
+static int3x3 filter4[10] =
 {
     int3x3(
         1, 1, 1,
@@ -179,7 +179,7 @@ int3x3 filter4[10] =
     )*/
 };
 
-int3x3 filter5[8] =
+static int3x3 filter5[8] =
 {
     int3x3(
         1, 1, 1,
@@ -236,7 +236,7 @@ int3x3 filter5[8] =
     ),*/
 };
 
-int3x3 filter6[8] =
+static int3x3 filter6[8] =
 {
     int3x3(
         1, 1, 1,
@@ -275,7 +275,7 @@ int3x3 filter6[8] =
     ),
 };
 
-int3x3 filter7[4] =
+static int3x3 filter7[4] =
 {
     int3x3(
         1, 1, 1,
@@ -305,7 +305,7 @@ int Count8NeighboursWithSetBits(int2 pos)
     {
         for (int j = -1; j < 2; j++)
         {
-            if (i == 0 && j == 0)
+            if (i == 0 & j == 0)
             {
                 continue;
             }
@@ -373,14 +373,17 @@ bool NoEliminationRules(int2 pos)
     bool no_eliminate = false;
     bool matchs_filter = true;
    
-    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == no_elim_1[0][1]);
-    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == no_elim_1[1][0]);
-    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == no_elim_1[1][1]);
-    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == no_elim_1[1][2]);
-    matchs_filter = matchs_filter & (Input[pos + int2(-1, -1)].x == no_elim_1[2][0]);
-    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == no_elim_1[2][1]);
-    matchs_filter = matchs_filter & (Input[pos + int2(1, -1)].x == no_elim_1[2][2]);
-    matchs_filter = matchs_filter & (Input[pos + int2(0, -2)].x == no_elim_1[3][1]);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == 0);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 1);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, -1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, -1)].x == 1);
+    
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -2)].x == 0);
     
     no_eliminate = no_eliminate | matchs_filter;
     
@@ -461,18 +464,18 @@ bool NoEliminationRules(int2 pos)
     
     matchs_filter = true;
     
+    matchs_filter = matchs_filter & (Input[pos + int2(-2, 1)].x == 0);
     matchs_filter = matchs_filter & (Input[pos + int2(-1, 1)].x == 0);
     matchs_filter = matchs_filter & (Input[pos + int2(0, 1)].x == 0);
-    matchs_filter = matchs_filter & (Input[pos + int2(1, 1)].x == 0);
     
-    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(-2, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, 0)].x == 1);
     matchs_filter = matchs_filter & (Input[pos + int2(0, 0)].x == 1);
-    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 1);
-    matchs_filter = matchs_filter & (Input[pos + int2(2, 0)].x == 0);
+    matchs_filter = matchs_filter & (Input[pos + int2(1, 0)].x == 0);
     
-    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(-1, -1)].x == 1);
+    matchs_filter = matchs_filter & (Input[pos + int2(0, -1)].x == 0);
     matchs_filter = matchs_filter & (Input[pos + int2(1, -1)].x == 0);
-    matchs_filter = matchs_filter & (Input[pos + int2(2, -1)].x == 0);
 
     
     no_eliminate = no_eliminate | matchs_filter;
@@ -611,7 +614,7 @@ bool EliminationRules(int2 pos)
         for (int k = 0; k < 8; k++)
         {
             matchs_filter = true;
-            for (int i = 1; i > -1 & matchs_filter; i--)
+            for (int i = 1; i > -2 & matchs_filter; i--)
             {
                 for (int j = -1; j < 2 & matchs_filter; j++)
                 {
@@ -637,7 +640,7 @@ bool EliminationRules(int2 pos)
         for (int k = 0; k < 12; k++)
         {
             matchs_filter = true;
-            for (int i = 1; i > -1 & matchs_filter; i--)
+            for (int i = 1; i > -2 & matchs_filter; i--)
             {
                 for (int j = -1; j < 2 & matchs_filter; j++)
                 {
@@ -663,7 +666,7 @@ bool EliminationRules(int2 pos)
         for (int k = 0; k < 10; k++)
         {
             matchs_filter = true;
-            for (int i = 1; i > -1 & matchs_filter; i--)
+            for (int i = 1; i > -2 & matchs_filter; i--)
             {
                 for (int j = -1; j < 2 & matchs_filter; j++)
                 {
@@ -689,7 +692,7 @@ bool EliminationRules(int2 pos)
         for (int k = 0; k < 8; k++)
         {
             matchs_filter = true;
-            for (int i = 1; i > -1 & matchs_filter; i--)
+            for (int i = 1; i > -2 & matchs_filter; i--)
             {
                 for (int j = -1; j < 2 & matchs_filter; j++)
                 {
@@ -714,7 +717,7 @@ bool EliminationRules(int2 pos)
         for (int k = 0; k < 8; k++)
         {
             matchs_filter = true;
-            for (int i = 1; i > -1 & matchs_filter; i--)
+            for (int i = 1; i > -2 & matchs_filter; i--)
             {
                 for (int j = -1; j < 2 & matchs_filter; j++)
                 {
@@ -739,7 +742,7 @@ bool EliminationRules(int2 pos)
         for (int k = 0; k < 4; k++)
         {
             matchs_filter = true;
-            for (int i = 1; i > -1 & matchs_filter; i--)
+            for (int i = 1; i > -2 & matchs_filter; i--)
             {
                 for (int j = -1; j < 2 & matchs_filter; j++)
                 {
