@@ -15,7 +15,6 @@ public class BilateralFilter : MonoBehaviour
     [SerializeField] RawImage _afterImage = null;
 
     [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField] private Texture _tex = null;
     private void Start()
     {
         if (!SystemInfo.supportsComputeShaders)

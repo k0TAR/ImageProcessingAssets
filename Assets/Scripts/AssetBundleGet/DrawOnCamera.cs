@@ -7,7 +7,7 @@ using System.Linq;
 
 public class DrawOnCamera : MonoBehaviour
 {
-    [SerializeField] private ComputeShader _renderShader;
+    [SerializeField] private ComputeShader _renderShader = null;
     private const int uvSideCount = 17;
     private const int _lightFieldWidth = 1024;
     private const int _lightFieldHeight = 512;
