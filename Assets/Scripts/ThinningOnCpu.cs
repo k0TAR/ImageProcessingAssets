@@ -3,19 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ThnningOnCpu : MonoBehaviour
+public class ThinningOnCpu : MonoBehaviour
 {
     [SerializeField] RawImage _beforeImage = null;
     [SerializeField] RawImage _afterImage = null;
 
-    [SerializeField] private bool _alphaOn = false;
-    //[SerializeField] [Range(1, 10)] int _thinningIteration = 5;
+    //[SerializeField] private bool _alphaOn = false;
+    [SerializeField] [Range(1, 10)] int _thinningIteration = 5;
 
-
-    private void Start()
-    {
-        _alphaOn = !_alphaOn;
-    }
 
     private void OnValidate()
     {
@@ -42,9 +37,13 @@ public class ThnningOnCpu : MonoBehaviour
 
         RenderTexture.active = currentRT;
 
+        var result = CpuTextureEditor.CalculateEachPixel(texture2D, ThinningAlgorithm);
+        for (int i = 1; i < _thinningIteration; i++)
+        {
+            result = CpuTextureEditor.CalculateEachPixel(result, ThinningAlgorithm);
 
-        _afterImage.texture = CpuTextureEditor.CalculateEachPixel(texture2D, ThinningAlgorithm);
-
+        }
+        _afterImage.texture = result;
     }
 
     private Color ThinningAlgorithm(Texture2D input, Vector2Int coord)
@@ -53,6 +52,9 @@ public class ThnningOnCpu : MonoBehaviour
 
         int width = input.width;
         int height = input.height;
+
+        bool changeColor = false;
+        bool noElimColor = false;
 
         List<FilterRules> eliminationRules = CreateEliminationRules();
 
@@ -70,7 +72,7 @@ public class ThnningOnCpu : MonoBehaviour
                     for (int j = -1; j < 2 && matchsFilter; j++)
                     {
                         float value;
-                        if (0 < coord.x + i && coord.x + i < width && 0 < coord.y + j && coord.y + j < height)
+                        if (0 <= coord.x + i && coord.x + i < width && 0 <= coord.y + j && coord.y + j < height)
                         {
                             value = input.GetPixel(coord.x + i, coord.y + j).r;
                         }
@@ -81,21 +83,68 @@ public class ThnningOnCpu : MonoBehaviour
                         matchsFilter &= value == elimRule[j * -1 + 1,i + 1];
                     }
                 }
-                if(amountSetPixel8Neighbour - 2 == 5 && eliminate)
-                {
-                    Debug.Log(coord);
-                }
+                
                 eliminate |= matchsFilter;
+                if (amountSetPixel8Neighbour - 2 == 4 && eliminate)
+                {
+                    changeColor = true;
+                }
                 if (eliminate) break;
+            }
+        }
+
+        if (eliminate)
+        {
+            FilterRules noEliminationRules = CreateNoEliminationRules();
+            for(int k = 0; k < noEliminationRules._rules.Count; k++)
+            {
+                bool matchsFilter = true;
+
+                //default center pixel is i = 0, j = 0.
+                //where 1 is default center.
+                // 0 | 0 | 0 | 0
+                // 0 | 1 | 0 | 0
+                // 0 | 0 | 0 | 0
+                // 0 | 0 | 0 | 0
+                for (int i = -1; i < 3 && matchsFilter; i++)
+                {
+                    for (int j = -2; j < 2 && matchsFilter; j++)
+                    {
+                        float value;
+                        if (0 <= coord.x + i && coord.x + i < width && 0 <= coord.y + j && coord.y + j < height)
+                        {
+                            value = input.GetPixel(
+                                coord.x + i + (noEliminationRules._centers[k].x - 1),
+                                coord.y + j + (noEliminationRules._centers[k].y - 1)
+                                ).r;
+                        }
+                        else
+                        {
+                            value = 0;
+                        }
+
+                        if(noEliminationRules._rules[k][j * -1 + 1, i + 1] == -1)
+                        {
+                            continue;
+                        }
+
+                        matchsFilter &= value == noEliminationRules._rules[k][j * -1 + 1, i + 1];
+                    }
+                }
+
+                eliminate &= !matchsFilter;
+                if (!eliminate) {
+                    noElimColor = true;
+                    break;
+                }
             }
         }
         
 
-        
+        Color centerColor = eliminate ? new Color(0, .2f, 0, 1) : input.GetPixel(coord.x, coord.y);
 
-        Color centerColor = eliminate ? new Color(0, 1, 0, 1) : input.GetPixel(coord.x, coord.y);
-
-
+        centerColor = changeColor ? new Color(0,0,.4f,1) : centerColor;
+        centerColor = noElimColor ? new Color(1, 0.6f, 0.4f) : centerColor;
         return centerColor;
     }
 
@@ -411,6 +460,65 @@ public class ThnningOnCpu : MonoBehaviour
 
 
         return eliminationRules;
+    }
+
+    private FilterRules CreateNoEliminationRules()
+    {
+        List<Matrix4x4> noEliminationRules = new List<Matrix4x4> {
+            new Matrix4x4(){
+                m00=-1,m01=0,m02=-1,m03=-1,
+                m10=1,m11=1,m12=1,m13=-1,
+                m20=1,m21=1,m22=1,m23=-1,
+                m30=-1,m31=0,m32=-1,m33=-1
+            },
+            new Matrix4x4(){
+                m00=-1,m01=0,m02=0,m03=-1,
+                m10=1,m11=1,m12=0,m13=-1,
+                m20=0,m21=1,m22=0,m23=-1,
+                m30=0,m31=0,m32=-1,m33=-1
+            },
+            new Matrix4x4(){
+                m00=-1,m01=0,m02=0,m03=-1,
+                m10=0,m11=1,m12=0,m13=-1,
+                m20=0,m21=1,m22=1,m23=-1,
+                m30=0,m31=0,m32=-1,m33=-1
+            },
+            new Matrix4x4(){
+                m00=-1,m01=0,m02=0,m03=0,
+                m10=0,m11=1,m12=1,m13=0,
+                m20=0,m21=0,m22=1,m23=-1,
+                m30=-1,m31=-1,m32=-1,m33=-1
+            },
+            new Matrix4x4(){
+                m00=-1,m01=1,m02=1,m03=-1,
+                m10=0,m11=1,m12=1,m13=0,
+                m20=-1,m21=1,m22=1,m23=-1,
+                m30=-1,m31=-1,m32=-1,m33=-1
+            },
+            new Matrix4x4(){
+                m00=0,m01=0,m02=0,m03=-1,
+                m10=0,m11=1,m12=1,m13=0,
+                m20=-1,m21=1,m22=0,m23=0,
+                m30=-1,m31=-1,m32=-1,m33=-1
+            },
+            new Matrix4x4(){
+                m00=0,m01=0,m02=0,m03=0,
+                m10=0,m11=1,m12=1,m13=0,
+                m20=0,m21=1,m22=1,m23=0,
+                m30=0,m31=0,m32=0,m33=0
+            },
+        };
+        List<Vector2Int> center = new List<Vector2Int> {
+            new Vector2Int(1,1),
+            new Vector2Int(2,1),
+            new Vector2Int(1,1),
+            new Vector2Int(1,1),
+            new Vector2Int(1,1),
+            new Vector2Int(1,2),
+            new Vector2Int(1,1),
+        };
+
+        return new FilterRules(noEliminationRules, center);
     }
 
     int Count8NeighboursWithSetBits(Texture2D input, Vector2Int pos)
