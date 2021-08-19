@@ -19,9 +19,9 @@ public static class CpuTextureEditor
         int height = inputTexture.height;
 
         Vector2Int coord = new Vector2Int(0, 0);
-        for (; coord.x < width; coord += Vector2Int.right)
+        for (coord.x = 0; coord.x < width; coord += Vector2Int.right)
         {
-            for(; coord.y < height; coord += Vector2Int.up)
+            for(coord.y = 0; coord.y < height; coord += Vector2Int.up)
             {
                 Color settingColor = algorithm(inputTexture, coord);
                 result.SetPixel(coord.x, coord.y, settingColor);
@@ -45,13 +45,14 @@ public static class CpuTextureEditor
 
     public static Texture2D ToTexture2D(RenderTexture rTex)
     {
-        Texture2D tex = new Texture2D(512, 512, TextureFormat.RGB24, false);
+        Texture2D tex = new Texture2D(rTex.width, rTex.height, TextureFormat.RGB24, false);
         
         // Remember currently active render texture
         RenderTexture currentActiveRT = RenderTexture.active;
         // ReadPixels looks at the active RenderTexture.
         RenderTexture.active = rTex;
         tex.ReadPixels(new Rect(0, 0, rTex.width, rTex.height), 0, 0);
+        tex.filterMode = FilterMode.Point;
         tex.Apply();
 
         RenderTexture.active = currentActiveRT;
