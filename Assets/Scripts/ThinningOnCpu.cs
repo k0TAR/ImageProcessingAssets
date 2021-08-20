@@ -22,6 +22,8 @@ public class ThinningOnCpu : MonoBehaviour
         {
             _afterImage.texture = null;
         }
+        
+        //Debug.Log("===Thinning2OnePixel on CPU START===");
         //System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
         //sw.Start();
 
@@ -101,22 +103,19 @@ public class ThinningOnCpu : MonoBehaviour
                 {
                     for (int j = -2; j < 2 && matchsFilter; j++)
                     {
-                        float value;
+
+                        if (noEliminationRules._rules[k][j * -1 + 1, i + 1] == -1)
+                        {
+                            continue;
+                        }
+
+                        float value = 0;
                         if (0 <= coord.x + i && coord.x + i < width && 0 <= coord.y + j && coord.y + j < height)
                         {
                             value = input.GetPixel(
-                                coord.x + i + (noEliminationRules._centers[k].x - 1),
-                                coord.y + j + (noEliminationRules._centers[k].y - 1)
+                                coord.x + i + (noEliminationRules._centers[k].y - 1),
+                                coord.y + j + (noEliminationRules._centers[k].x - 1)
                                 ).r;
-                        }
-                        else
-                        {
-                            value = 0;
-                        }
-
-                        if(noEliminationRules._rules[k][j * -1 + 1, i + 1] == -1)
-                        {
-                            continue;
                         }
 
                         matchsFilter &= value == noEliminationRules._rules[k][j * -1 + 1, i + 1];

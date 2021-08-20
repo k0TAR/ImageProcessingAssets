@@ -8,6 +8,8 @@ bool AlphaOn;
 Texture2D<float4> Input;
 RWTexture2D<float4> Result;
 
+#define NO_ELIM_RULE_AMOUNT 7
+
 struct EliminationRules
 {
     int3x3 rules[6][12];
@@ -16,12 +18,12 @@ struct EliminationRules
 
 struct NoEliminationRules
 {
-    int4x4 rules[7];
-    int2 centers[7];
+    int4x4 rules[NO_ELIM_RULE_AMOUNT];
+    int2 centers[NO_ELIM_RULE_AMOUNT];
 };
 
 
-int Count8NeighboursWithSetBits(int2 pos)
+int Count8NeighboursWithSetBits(int2 coord)
 {
     int amount = 0;
     for (int i = -1; i < 2; i++)
@@ -32,7 +34,7 @@ int Count8NeighboursWithSetBits(int2 pos)
             {
                 continue;
             }
-            amount += Input[pos + int2(i, j)].x;
+            amount += Input[coord + int2(i, j)].x;
         }
     }
     return amount;
@@ -422,37 +424,102 @@ NoEliminationRules CreateNoEliminationRules()
     return noElimRules;
 }
 
-bool IsStopEliminate(int2 pos)
-{
-    bool no_eliminate = false;
-    bool matchs_filter = true;
 
-    
-    return no_eliminate;
-}
 
-bool IsEliminate(int2 pos)
+bool IsEliminate(int2 coord)
 {
-    int amount = Count8NeighboursWithSetBits(pos);
+    int amount = Count8NeighboursWithSetBits(coord);
     
     bool eliminate = false;
-    bool matchs_filter = true;
+    
     
     //amount == 0, 1, 8: no elimination
     if (1 < amount && amount < 8)
     {
+        EliminationRules elimRules = CreateEliminationRules();
+        bool matchs_filter = true;
+        float width = 0, height = 0;
+        Input.GetDimensions(width, height);
+        int amountIndex = amount - 2;
         
+        for (int k = 0; k < elimRules.rulesAmount[amountIndex]; k++)
+        {
+            matchs_filter = true;
+            
+            for (int i = -1; i < 2 && matchs_filter; i++)
+            {
+                for (int j = -1; j < 2 && matchs_filter; j++)
+                {
+                    int value = 0;
+                    if (0 <= coord.x + i && coord.x + i < width && 0 <= coord.y + j && coord.y + j < height)
+                    {
+                        value = Input[coord + int2(i, j)].x;
+                    }
+
+                    matchs_filter = matchs_filter 
+                        && (value == elimRules.rules[amountIndex][k][j * -1 + 1][i + 1]);
+                }
+            }
+            
+            eliminate = eliminate || matchs_filter;
+            if (eliminate)
+                break;
+        }
     }
     else
     {
         return false;
     }
 
-    return false;
+    return eliminate;
 }
 
+bool IsStopEliminate(int2 coord)
+{
+    bool no_eliminate = false;
+    bool matchs_filter = true;
 
+    NoEliminationRules noElimRules = CreateNoEliminationRules();
+    float width = 0, height = 0;
+    Input.GetDimensions(width, height);
     
+    for (int k = 0; k < NO_ELIM_RULE_AMOUNT; k++)
+    {
+        matchs_filter = true;
+        
+        
+        for (int i = -1; i < 3 && matchs_filter; i++)
+        {
+            for (int j = -2; j < 2 && matchs_filter; j++)
+            {
+                if (noElimRules.rules[k][j * -1 + 1][i + 1] == -1)
+                {
+                    continue;
+                }
+                
+                int value = 0;
+                if (0 <= coord.x + i && coord.x + i < width && 0 <= coord.y + j && coord.y + j < height)
+                {
+                    value = Input[
+                        coord
+                        + int2(i, j)
+                        + int2(noElimRules.centers[k].y, noElimRules.centers[k].x) + int2(-1, -1)
+                    ].x;
+                }
+
+                matchs_filter = matchs_filter
+                        && (value == noElimRules.rules[k][j * -1 + 1][i + 1]);
+            }
+        }
+
+        no_eliminate = no_eliminate || matchs_filter;
+        if (no_eliminate)
+            break;
+    }
+    
+    return no_eliminate;
+}
+
 
 [numthreads(8, 8, 1)]
 void Thinning2OnePixel(uint3 id : SV_DispatchThreadID)
@@ -461,7 +528,7 @@ void Thinning2OnePixel(uint3 id : SV_DispatchThreadID)
     if (Input[id.xy].x == 0)
     {
         //int4(0, 0, 0, 0)
-        Result[id.xy] = int4(0, 0, 0, 1);
+        Result[id.xy] = Input[id.xy];
     }
     else
     {
@@ -473,16 +540,23 @@ void Thinning2OnePixel(uint3 id : SV_DispatchThreadID)
             bool isStopEliminate = IsStopEliminate(id.xy);
             if (isStopEliminate)
             {
-                Result[id.xy] = int4(1, 0, .2, 1);
+                Result[id.xy] = float4(1, .5, .5, 1);
             }
             else
             {
-                Result[id.xy] = int4(0, .3, 0, 1);
+                Result[id.xy] = float4(0, .4, 0, 1);
             }
         }
         else 
         {
-            Result[id.xy] = int4(1, 1, 1, 1);
+            if (Input[id.xy].y > 0)
+            {
+                Result[id.xy] = Input[id.xy];
+            }
+            else
+            {
+                Result[id.xy] = float4(1, 1, 1, 1);
+            }
         }
     }
     

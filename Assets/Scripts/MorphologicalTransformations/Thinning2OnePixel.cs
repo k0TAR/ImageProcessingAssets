@@ -11,7 +11,7 @@ public class Thinning2OnePixel : MonoBehaviour
 
     [SerializeField] private ComputeShader _computeShader = null;
     [SerializeField] private bool _alphaOn = false;
-    [SerializeField] [Range(1, 10)] int _thinningIteration = 5;
+    [SerializeField] [Range(1, 15)] int _thinningIteration = 5;
 
 
     private void Start()
@@ -31,6 +31,10 @@ public class Thinning2OnePixel : MonoBehaviour
         Dictionary<string, object> computeShaderParams = new Dictionary<string, object>();
         computeShaderParams.Add("AlphaOn", Convert.ToInt32(_alphaOn));
 
+        Debug.Log("===Thinning2OnePixel on GPU START===");
+        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+        sw.Start();
+
         var result = ComputeShaderApplier.RunComputeShader(_computeShader, _beforeImage.texture, computeShaderParams); ;
         for (int i = 1; i < _thinningIteration; i++)
         {
@@ -38,5 +42,8 @@ public class Thinning2OnePixel : MonoBehaviour
         }
 
         _afterImage.texture = result;
+
+        sw.Stop();
+        Debug.Log("Iteration: " + _thinningIteration + ", Processing Time: " + sw.ElapsedMilliseconds + " ms");
     }
 }
