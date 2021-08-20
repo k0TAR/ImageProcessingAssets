@@ -56,7 +56,7 @@ public static class ComputeShaderApplier
     {
         //RenderTextureの初期化
         //Initializing Render Texture
-        var result = GenerateRenderTexture(input);
+        var result = input.ToRenderTexture();
 
         //Kernel Indexの取得
         //Getting Kernel Index
@@ -92,7 +92,7 @@ public static class ComputeShaderApplier
     {
         //RenderTextureの初期化
         //Initializing Render Texture
-        var result = GenerateRenderTexture(input);
+        var result = input.ToRenderTexture();
 
         //Kernel Indexの取得
         //Getting Kernel Index
@@ -131,7 +131,7 @@ public static class ComputeShaderApplier
     {
         //RenderTextureの初期化
         //Initializing Render Texture
-        var result = GenerateRenderTexture(input, grid);
+        var result = input.ToRenderTexture(grid);
 
         //Kernel Indexの取得
         //Getting Kernel Index
@@ -195,21 +195,6 @@ public static class ComputeShaderApplier
         }
     }
 
-    private static RenderTexture GenerateRenderTexture(Texture input)
-    {
-        var result = new RenderTexture(input.width, input.height, 0, RenderTextureFormat.ARGB32);
-        result.enableRandomWrite = true;
-        result.filterMode = FilterMode.Point;
-        result.Create();
-        return result;
-    }
-    private static RenderTexture GenerateRenderTexture(Texture input, int[] grid)
-    {
-        var result = new RenderTexture(input.width / grid[0], input.height / grid[1], 0, RenderTextureFormat.ARGB32);
-        result.enableRandomWrite = true;
-        result.filterMode = FilterMode.Point;
-        result.Create();
-        return result;
-    }
+
 }
 
