@@ -23,21 +23,7 @@ public class ThinningOnCpu : MonoBehaviour
             _afterImage.texture = null;
         }
 
-        Texture mainTexture = _beforeImage.texture;
-        Texture2D texture2D = new Texture2D(mainTexture.width, mainTexture.height, TextureFormat.RGBA32, false);
-
-        RenderTexture currentRT = RenderTexture.active;
-
-        RenderTexture renderTexture = new RenderTexture(mainTexture.width, mainTexture.height, 32);
-        Graphics.Blit(mainTexture, renderTexture);
-
-        RenderTexture.active = renderTexture;
-        texture2D.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-        texture2D.Apply();
-
-        RenderTexture.active = currentRT;
-
-        var result = CpuTextureEditor.CalculateEachPixel(texture2D, ThinningAlgorithm);
+        var result = CpuTextureEditor.CalculateEachPixel(_beforeImage.texture.ToTexture2D(), ThinningAlgorithm);
         for (int i = 1; i < _thinningIteration; i++)
         {
             result = CpuTextureEditor.CalculateEachPixel(result, ThinningAlgorithm);
