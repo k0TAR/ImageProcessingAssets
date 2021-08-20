@@ -56,7 +56,7 @@ public static class ComputeShaderApplier
     {
         //RenderTextureの初期化
         //Initializing Render Texture
-        var result = input.ToRenderTexture();
+        var result = input.GenerateCleanRenderTexture();
 
         //Kernel Indexの取得
         //Getting Kernel Index
@@ -92,7 +92,7 @@ public static class ComputeShaderApplier
     {
         //RenderTextureの初期化
         //Initializing Render Texture
-        var result = input.ToRenderTexture();
+        var result = input.GenerateCleanRenderTexture();
 
         //Kernel Indexの取得
         //Getting Kernel Index
@@ -131,7 +131,7 @@ public static class ComputeShaderApplier
     {
         //RenderTextureの初期化
         //Initializing Render Texture
-        var result = input.ToRenderTexture(grid);
+        var result = input.GenerateCleanRenderTexture(grid);
 
         //Kernel Indexの取得
         //Getting Kernel Index

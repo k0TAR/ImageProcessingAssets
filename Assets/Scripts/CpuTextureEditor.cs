@@ -13,7 +13,7 @@ public static class CpuTextureEditor
     /// <returns>The result of the texture.</returns>
     public static Texture2D CalculateEachPixel(Texture2D inputTexture, System.Func<Texture2D, Vector2Int, Color> algorithm)
     {
-        Texture2D result = inputTexture.ToTexture2D();
+        Texture2D result = inputTexture.GenerateCleanTexture2D();
 
         int width = inputTexture.width;
         int height = inputTexture.height;
