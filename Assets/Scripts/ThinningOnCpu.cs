@@ -22,6 +22,8 @@ public class ThinningOnCpu : MonoBehaviour
         {
             _afterImage.texture = null;
         }
+        //System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+        //sw.Start();
 
         var result = CpuTextureEditor.CalculateEachPixel(_beforeImage.texture.ToTexture2D(), ThinningAlgorithm);
         for (int i = 1; i < _thinningIteration; i++)
@@ -30,6 +32,9 @@ public class ThinningOnCpu : MonoBehaviour
 
         }
         _afterImage.texture = result;
+
+        //sw.Stop();
+        //Debug.Log("Iteration: " + _thinningIteration + ", Processing Time: " + sw.ElapsedMilliseconds + " ms");
     }
 
     private Color ThinningAlgorithm(Texture2D input, Vector2Int coord)
