@@ -10,6 +10,6 @@ The image processing scripts that can be found here will be written mostly in co
 * Binarization
 * Simple Dilation
 * Simple Erosion
-* Thnning to One Pixel (Erosion)
+* Thinning to One Pixel (Erosion)
 
 * Naive Light Field Rendering Through Ray Trace
