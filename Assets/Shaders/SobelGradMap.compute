@@ -1,0 +1,49 @@
+﻿#pragma kernel SobelGradMap
+
+Texture2D<float4> Input;
+RWTexture2D<float4> Result;
+
+
+
+[numthreads(8,8,1)]
+void SobelGradMap (uint3 id : SV_DispatchThreadID)
+{
+    
+    float3x3 kXfilter = float3x3(
+        -1, 0, 1,
+        -2, 0, 2,
+        -1, 0, 1
+    );
+    float3x3 kYfilter = float3x3(
+        -1, -2, -1,
+         0, 0, 0,
+         1, 2, 1
+    );
+    
+    
+    int width = 0, height = 0;
+    Input.GetDimensions(width, height);
+    
+    float Gx = 0, Gy = 0;
+    float pixelValue = 0;
+    
+    for (int x = -1; x < 2; x++)
+    {
+        for (int y = -1; y < 2; y++)
+        {
+            pixelValue = 0;
+            pixelValue = Input[id.xy + int2(x, y)].x;
+            Gx += pixelValue * kXfilter[x + 1][y + 1];
+            Gy += pixelValue * kYfilter[x + 1][y + 1];
+        }
+    }
+    
+    Gx *= -1;
+    Gy *= -1;
+    
+    float4 result = float4(Gx, Gy, 0, 1);
+    result = normalize(result);
+    result = (result + 1) / 2;
+    Result[id.xy] = result;
+}
+
