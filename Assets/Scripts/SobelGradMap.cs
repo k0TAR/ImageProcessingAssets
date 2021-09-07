@@ -26,7 +26,7 @@ public class SobelGradMap : MonoBehaviour
     {
         if (!ComputeShaderApplier.IsInitializationEnough(ref _beforeImage, ref _afterImage, this)) return;
 
-        var result = ComputeShaderApplier.RunComputeShader(_computeShader, _beforeImage.texture); ;
+        var result = ComputeShaderApplier.RunComputeShader(_computeShader, _beforeImage.texture);
 
         _afterImage.texture = result;
 

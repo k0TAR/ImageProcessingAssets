@@ -3,8 +3,14 @@
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
-RWTexture2D<float4> Result;
 static const float PI = 3.14159265f;
+RWTexture2D<float4> Result;
+Texture2D<float4> Input;
+float Sigma;
+float Theta;
+float Lambda;
+float Gamma;
+float Psi;
 
 float GaborFunction(int2 coord, float sigma, float theta, float lambda, float gamma, float psi)
 {
