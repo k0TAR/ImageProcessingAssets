@@ -33,6 +33,6 @@ float GaborFunction(int2 coord, float sigma, float theta, float lambda, float ga
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     // TODO: insert actual code here!
-
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    float Gb = GaborFunction(id.xy, Sigma, Theta, Lambda, Gamma, Psi);
+    Result[id.xy] = float4( Gb, Gb, Gb, 1.0);
 }
