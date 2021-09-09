@@ -6,33 +6,25 @@
 static const float PI = 3.14159265f;
 RWTexture2D<float4> Result;
 Texture2D<float4> Input;
-float Sigma;
-float Theta;
-float Lambda;
-float Gamma;
-float Psi;
+RWStructuredBuffer<float> GaborKernel; 
+int KernelSize;
+float Weight;
+int IsAlpha;
 
-float GaborFunction(int2 coord, float sigma, float theta, float lambda, float gamma, float psi)
-{
-    float sigma_x = sigma;
-    float sigma_y = sigma / gamma;
-    float sig_x = -1 / (2 * sigma_x * sigma_x);
-    float sig_y = -1 / (2 * sigma_y * sigma_y);
-    
-    float xr = coord.x * cos(theta) + coord.y * sin(theta);
-    float yr = -coord.x * sin(theta) + coord.y * cos(theta);
-
-    float cscale = 2 * PI / lambda;
-    
-    
-    return exp(sigma_x * xr * xr + sigma_y * yr * yr) * cos(cscale * xr + psi);
-
-}
 
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
-    float Gb = GaborFunction(id.xy, Sigma, Theta, Lambda, Gamma, Psi);
-    Result[id.xy] = float4( Gb, Gb, Gb, 1.0);
+
+    for (uint dx = 0; dx < KernelSize; dx++)
+    {
+        for (uint dy = 0; dy < KernelSize; dy++)
+        {
+            float KernelValue = GaborKernel[dx * KernelSize + dy];
+            Result[id.xy] += Input[id.xy + int2(dx - KernelSize / 2, dy - KernelSize / 2)] 
+                * KernelValue / Weight;
+        }
+    }
+    Result[id.xy] = float4(Result[id.xy].xyz, Result[id.xy].z > .1 ? 1 : !IsAlpha);
+
 }
