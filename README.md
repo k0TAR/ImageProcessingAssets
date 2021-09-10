@@ -7,6 +7,7 @@ The image processing scripts that can be found here will be written mostly in co
 * Bilateral Filter
 * Gaussian Filter
 * Sobel Filter
+* Gabor Filter (Can check the used gabor kernel)
 * Binarization
 * Simple Dilation
 * Simple Erosion
