@@ -7,24 +7,26 @@ static const float PI = 3.14159265f;
 RWTexture2D<float4> Result;
 Texture2D<float4> Input;
 RWStructuredBuffer<float> GaborKernel; 
-int KernelSize;
+uint KernelSize;
 float Weight;
-int IsAlpha;
+int UseWeightToAverageKernel;
 
 
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-
+    float4 result = float4(0, 0, 0, 0);
     for (uint dx = 0; dx < KernelSize; dx++)
     {
         for (uint dy = 0; dy < KernelSize; dy++)
         {
             float KernelValue = GaborKernel[dx * KernelSize + dy];
-            Result[id.xy] += Input[id.xy + int2(dx - KernelSize / 2, dy - KernelSize / 2)] 
-                * KernelValue / Weight;
+            result += Input[id.xy + int2(dx - KernelSize / 2, dy - KernelSize / 2)]
+                * KernelValue;
         }
     }
-    Result[id.xy] = float4(Result[id.xy].xyz, Result[id.xy].z > .1 ? 1 : !IsAlpha);
+    //Result[id.xy] = Result[id.xy]/Weight;
+    Result[id.xy] = UseWeightToAverageKernel ? result / Weight : result;
+    Result[id.xy] = float4(Result[id.xy].xyz, 1);
 
 }

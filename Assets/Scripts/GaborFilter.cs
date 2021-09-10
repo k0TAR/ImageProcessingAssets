@@ -8,9 +8,12 @@ public class GaborFilter : MonoBehaviour
 {
     [SerializeField] RawImage _beforeImage = null;
     [SerializeField] RawImage _afterImage = null;
+    [SerializeField] RawImage _viewKernel = null;
+    [SerializeField] private ComputeShader _kernelViewComputeShader = null;
+
 
     [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField] private bool _alphaOn = false;
+    [SerializeField] private bool _useWeight = false;
     [SerializeField] [Range(3, 100)] private int _size = 3;
     [SerializeField] [Range(0, 20)] private float _sigma = .1f;
     [SerializeField] [Range(0, 10)] private float _theta = .1f;
@@ -50,12 +53,27 @@ public class GaborFilter : MonoBehaviour
         computeShaderParams.Add("GaborKernel", kernelBuffer);
         computeShaderParams.Add("KernelSize", _size);
         computeShaderParams.Add("Weight", weight);
-        computeShaderParams.Add("IsAlpha", Convert.ToInt32(_alphaOn));
+        computeShaderParams.Add("UseWeightToAverageKernel", Convert.ToInt32(_useWeight));
 
 
         var result = ComputeShaderApplier.RunComputeShader(_computeShader, _beforeImage.texture, computeShaderParams);
 
         _afterImage.texture = result;
+
+
+        Dictionary<string, object> kernelParams = new Dictionary<string, object>();
+        kernelParams.Add("Size", _size);
+        kernelParams.Add("Sigma", _sigma);
+        kernelParams.Add("Theta", _theta);
+        kernelParams.Add("Lambda", _lambda);
+        kernelParams.Add("Gamma", _gamma);
+        kernelParams.Add("Psi", _psi);
+
+        var kernelTexture = ComputeShaderApplier.RunComputeShader(_kernelViewComputeShader, _beforeImage.texture, kernelParams);
+
+
+        _viewKernel.texture = kernelTexture;
+
 
         kernelBuffer.Dispose();
         kernelBuffer = null;
@@ -83,7 +101,7 @@ public class GaborFilter : MonoBehaviour
                 float xr = i * Mathf.Cos(theta) + j * Mathf.Sin(theta);
                 float yr = -i * Mathf.Sin(theta) + j * Mathf.Cos(theta);
 
-                gaborKernel[(i + max) * size + (j + max)] = Mathf.Exp(sig_x * xr * xr + sig_y * yr * yr) * Mathf.Cos(cscale * xr + psi);
+                gaborKernel[(i + max) * size + (j + max)] = Mathf.Exp(sig_x * xr * xr + sig_y * yr * yr ) * Mathf.Cos(cscale * xr + psi);
 
             }
         }

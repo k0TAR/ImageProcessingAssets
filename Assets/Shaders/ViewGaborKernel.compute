@@ -1,0 +1,46 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+Texture2D<float4> Input;
+RWTexture2D<float4> Result;
+uint Size;
+float Sigma;
+float Theta;
+float Lambda;
+float Gamma;
+float Psi;
+static float PI = 3.14;
+
+float GetGaborKernel(float2 coord, float theta, float sig_x, float sig_y, float cscale, float psi){
+
+
+    float xr = coord.x * cos(theta) + coord.y * sin(theta);
+    float yr = -coord.x * sin(theta) + coord.y * cos(theta);
+    
+
+    return exp(sig_x * xr * xr + sig_y * yr * yr) * cos(cscale * xr + psi);
+}
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float sigma_x = Sigma;
+    float sigma_y = Sigma / Gamma;
+    float sig_x = -1 / (2 * sigma_x * sigma_x);
+    float sig_y = -1 / (2 * sigma_y * sigma_y);
+    float cscale = 2 * PI / Lambda;
+    
+    int width = 0, height = 0;
+    Result.GetDimensions(width, height);
+    
+    float2 coord = float2(
+     (float) id.x / (float) width * (float) Size - (float)Size / 2,
+      (float) id.y / (float) height * (float) Size - (float)Size / 2
+    );
+    
+    float result = GetGaborKernel(coord, Theta, sig_x, sig_y, cscale, Psi);
+    Result[id.xy] = float4(result,result,result, 1);
+
+}
