@@ -156,6 +156,41 @@ RenderTexture:
     m_WrapW: 1
   m_Dimension: 2
   m_VolumeDepth: 1
+--- !u!84 &92954346
+RenderTexture:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  serializedVersion: 3
+  m_Width: 512
+  m_Height: 512
+  m_AntiAliasing: 1
+  m_MipCount: -1
+  m_DepthFormat: 0
+  m_ColorFormat: 8
+  m_MipMap: 0
+  m_GenerateMips: 1
+  m_SRGB: 0
+  m_UseDynamicScale: 0
+  m_BindMS: 0
+  m_EnableCompatibleFormat: 1
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 0
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 1
+    m_WrapV: 1
+    m_WrapW: 1
+  m_Dimension: 2
+  m_VolumeDepth: 1
 --- !u!1 &326891247
 GameObject:
   m_ObjectHideFlags: 0
@@ -504,7 +539,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 812074488}
   m_CullTransparentMesh: 0
---- !u!84 &911201906
+--- !u!84 &850475063
 RenderTexture:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -678,7 +713,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 1531471739}
+  m_Texture: {fileID: 1875666067}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -730,7 +765,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 911201906}
+  m_Texture: {fileID: 850475063}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -932,7 +967,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 132670dcfd34f324db560305eb9ae2ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _beforeImage: {fileID: 1517162745}
+  _beforeImage: {fileID: 1390766033}
   _afterImage: {fileID: 967942393}
   _computeShader: {fileID: 7200000, guid: 91ed356d7a1103841a425c8da462647f, type: 3}
   _alphaOn: 0
@@ -992,7 +1027,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 1894891645}
+  m_Texture: {fileID: 92954346}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -1127,9 +1162,9 @@ MonoBehaviour:
   _kernelViewComputeShader: {fileID: 7200000, guid: 9414652c1a343ac47814cc3c56f1676c,
     type: 3}
   _computeShader: {fileID: 7200000, guid: 27eb5018dea3ba344a7424b7cdabd4c8, type: 3}
-  _useWeight: 1
+  _useWeight: 0
   _size: 31
-  _sigma: 4
+  _sigma: 10.4
   _theta: 0
   _lambda: 10
   _gamma: 0.5
@@ -1205,41 +1240,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1517162743}
   m_CullTransparentMesh: 0
---- !u!84 &1531471739
-RenderTexture:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 3
-  m_Width: 512
-  m_Height: 512
-  m_AntiAliasing: 1
-  m_MipCount: -1
-  m_DepthFormat: 0
-  m_ColorFormat: 8
-  m_MipMap: 0
-  m_GenerateMips: 1
-  m_SRGB: 0
-  m_UseDynamicScale: 0
-  m_BindMS: 0
-  m_EnableCompatibleFormat: 1
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 0
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 1
-    m_WrapV: 1
-    m_WrapW: 1
-  m_Dimension: 2
-  m_VolumeDepth: 1
 --- !u!1 &1768441086
 GameObject:
   m_ObjectHideFlags: 0
@@ -1306,7 +1306,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!84 &1894891645
+--- !u!84 &1875666067
 RenderTexture:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
