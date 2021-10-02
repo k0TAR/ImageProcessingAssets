@@ -20,7 +20,7 @@ float GetGaborKernel(float2 coord, float theta, float sig_x, float sig_y, float 
     float yr = -coord.x * sin(theta) + coord.y * cos(theta);
     
 
-    return exp(sig_x * xr * xr + sig_y * yr * yr) * cos(cscale * xr + psi);
+    return ( exp(sig_x * xr * xr + sig_y * yr * yr) * cos(cscale * xr + psi) + 1) / 2;
 }
 
 [numthreads(8,8,1)]

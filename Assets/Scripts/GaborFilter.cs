@@ -15,10 +15,10 @@ public class GaborFilter : MonoBehaviour
     [SerializeField] private ComputeShader _computeShader = null;
     [SerializeField] private bool _useWeight = false;
     [SerializeField] [Range(3, 100)] private int _size = 3;
-    [SerializeField] [Range(0, 20)] private float _sigma = .1f;
-    [SerializeField] [Range(0, 10)] private float _theta = .1f;
-    [SerializeField] [Range(0, 10)] private float _lambda = .1f;
-    [SerializeField] [Range(0, 10)] private float _gamma = .1f;
+    [SerializeField] [Range(0, 50)] private float _sigma = .1f;
+    [SerializeField] [Range(-3.14f, 3.14f)] private float _theta = .1f;
+    [SerializeField] [Range(0, 50)] private float _lambda = .1f;
+    [SerializeField] [Range(0, 50)] private float _gamma = .1f;
     [SerializeField] [Range(0, 10)] private float _psi = .1f;
 
     private void Start()
@@ -34,6 +34,11 @@ public class GaborFilter : MonoBehaviour
     private void OnValidate()
     {
         if (!ComputeShaderApplier.IsInitializationEnough(ref _beforeImage, ref _afterImage, this)) return;
+
+        if(_size % 2 == 0)
+        {
+            _size -= 1;
+        }
 
         float[] gaborKernel = GetGaborKernel(_size, _sigma, _theta, _lambda, _gamma, _psi);
         float weight = 0;
@@ -57,9 +62,9 @@ public class GaborFilter : MonoBehaviour
 
 
         var result = ComputeShaderApplier.RunComputeShader(_computeShader, _beforeImage.texture, computeShaderParams);
+        result.filterMode = FilterMode.Point;
 
         _afterImage.texture = result;
-
 
         Dictionary<string, object> kernelParams = new Dictionary<string, object>();
         kernelParams.Add("Size", _size);
