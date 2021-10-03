@@ -1,0 +1,32 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel PixelPropagation
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+Texture2D<float4> Input;
+int Divider;
+int PropagateRange;
+
+[numthreads(8, 8, 1)]
+void PixelPropagation(uint3 id : SV_DispatchThreadID)
+{
+    Result[id.xy] = Input[id.xy];
+    for (int i = 1; i < PropagateRange; i++)
+    {
+        Result[id.xy] += Input[id.xy + int2(i, 0)] * 1 / i / Divider;
+        Result[id.xy] += Input[id.xy - int2(i, 0)] * 1 / i / Divider;
+        Result[id.xy] += Input[id.xy + int2(0, i)] * 1 / i / Divider;
+        Result[id.xy] += Input[id.xy - int2(0, i)] * 1 / i / Divider;
+        
+    }
+    
+    //Result[id.xy] += Source[id.xy + int2(-1, 1)] * 1 / 5;
+    //Result[id.xy] += Source[id.xy + int2(0, 1)] * 1 / 7;
+    //Result[id.xy] += Source[id.xy + int2(1, 1)] * 1 / 5;
+    
+    //Result[id.xy] += Source[id.xy + int2(-1, -1)] * 1 / 5;
+    //Result[id.xy] += Source[id.xy + int2(0, -1)] * 1 / 7;
+    //Result[id.xy] += Source[id.xy + int2(1, -1)] * 1 / 5;
+    
+}
