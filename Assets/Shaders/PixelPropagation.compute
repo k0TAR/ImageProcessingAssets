@@ -18,6 +18,10 @@ void PixelPropagation(uint3 id : SV_DispatchThreadID)
         Result[id.xy] += Input[id.xy - int2(i, 0)] * 1 / i / Divider;
         Result[id.xy] += Input[id.xy + int2(0, i)] * 1 / i / Divider;
         Result[id.xy] += Input[id.xy - int2(0, i)] * 1 / i / Divider;
+        Result[id.xy] += Input[id.xy + int2(i, i)] * 1 / i / Divider;
+        Result[id.xy] += Input[id.xy - int2(i, i)] * 1 / i / Divider;
+        Result[id.xy] += Input[id.xy + int2(-i, i)] * 1 / i / Divider;
+        Result[id.xy] += Input[id.xy + int2(i, -i)] * 1 / i / Divider;
         
     }
     
