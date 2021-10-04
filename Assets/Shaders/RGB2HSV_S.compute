@@ -1,0 +1,57 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel RGBtoHSV_S
+
+float4 rgb2hsv(float4 rgb)
+{
+    float4 hsv;
+
+    float maxValue = max(rgb.x, max(rgb.y, rgb.z));
+    float minValue = min(rgb.x, min(rgb.y, rgb.z));
+    float delta = maxValue - minValue;
+            
+    hsv.z = maxValue;
+            
+    if (maxValue != 0.0)
+    {
+        hsv.y = delta / maxValue;
+    }
+    else
+    {
+        hsv.y = 0.0;
+    }
+            
+    if (hsv.y > 0.0)
+    {
+        if (rgb.x == maxValue)
+        {
+            hsv.x = (rgb.y - rgb.z) / delta;
+        }
+        else if (rgb.y == maxValue)
+        {
+            hsv.x = 2 + (rgb.z - rgb.x) / delta;
+        }
+        else
+        {
+            hsv.x = 4 + (rgb.x - rgb.y) / delta;
+        }
+        hsv.x /= 6.0;
+        if (hsv.x < 0)
+        {
+            hsv.x += 1.0;
+        }
+    }
+    
+    hsv.w = 1;
+    return hsv;
+}
+
+Texture2D<float4> Input;
+RWTexture2D<float4> Result;
+
+[numthreads(8, 8, 1)]
+void RGBtoHSV_S(uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+    float s = rgb2hsv(Input[id.xy]).y;
+    Result[id.xy] = float4(s, s, s, 1);
+}
