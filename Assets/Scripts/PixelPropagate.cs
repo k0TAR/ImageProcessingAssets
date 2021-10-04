@@ -12,7 +12,7 @@ public class PixelPropagate : MonoBehaviour
     [SerializeField] private ComputeShader _computeShader = null;
 
     [SerializeField] [Range(1, 10)] private int _divider = 2;
-    [SerializeField] [Range(1, 20)] private int _propagate_range = 5;
+    [SerializeField] [Range(1, 50)] private int _propagate_range = 5;
 
     private void Start()
     {
