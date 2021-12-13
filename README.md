@@ -2,7 +2,7 @@
 
 The image processing scripts that can be found here will be written mostly in compute shader for algorithm and c# for readying compute shader.
 
-## Current available assets
+## Current available image processing
 
 * Bilateral Filter
 * Gaussian Filter
